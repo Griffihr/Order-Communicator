@@ -5,8 +5,35 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Command_Transmission"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Simulator Command Communicator" Height="720" Width="1280" FontFamily="Seoge UI Light">
     <Grid>
 
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="auto" />
+            <ColumnDefinition Width="auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="10" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="10" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="10" />
+        </Grid.RowDefinitions>
+
+        <DataGrid x:Name="DataGridWpf" HorizontalAlignment="Left" Margin="10,10,0,0" Width="800" Height="400" Grid.Column="3" Grid.Row="2">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Button Grid.Column="1" Grid.Row="1" Content="Connect" Width="100" Height="50"></Button>
+
+        <Button x:Name="Add_Button" Content="Add" Width="100" Height="50" Grid.Column="1" Grid.Row="5"></Button>
+        <Button x:Name="Remove_Button" Content="Remove" Width="100" Height="50" Grid.Column="2" Grid.Row="5"></Button>
     </Grid>
 </Window>
