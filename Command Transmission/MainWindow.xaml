@@ -21,27 +21,26 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="10" />
         </Grid.RowDefinitions>
 
-        <DataGrid x:Name="DataGridWpf" HorizontalAlignment="Right" Margin="10,10,0,0" Width="1000" Height="500" Grid.Column="3" Grid.Row="1" CanUserAddRows="True" CanUserDeleteRows="True">
+        <DataGrid x:Name="DG1" HorizontalAlignment="Right" Margin="10,10,0,0" Width="1000" Height="500" Grid.Column="3" Grid.Row="1" Grid.RowSpan="5"  
+                  CanUserDeleteRows="True" CanUserAddRows="False" AutoGenerateColumns="False" ItemsSource="{Binding Command_Struct}" >
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ID"/>
-                <DataGridTextColumn Header="Maxtid"/>
-                <DataGridTextColumn Header="Gånger"/>
-                <DataGridTextColumn Header="Maxantal / h"/>
-                <DataGridTextColumn Header="Körd / h" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Upphämtnings Adr"/>
-                <DataGridTextColumn Header="Avlämnings Adr"/>
-                <DataGridTextColumn Header="Start-Ts"/>
-                <DataGridTextColumn Header="Prio"/>
+                <DataGridTextColumn Header="Maxtid" Binding="{Binding MaxTid}"/>
+                <DataGridTextColumn Header="Antal Uppdrag" Binding="{Binding AntalUpdr}"/>
+                <DataGridTextColumn Header="Maxantal / h" Binding="{Binding MaxUpdrH}"/>
+                <DataGridTextColumn Header="Körd / h" Binding="{Binding KördH}"/>
+                <DataGridTextColumn Header="Upphämtnings Adr" Binding="{Binding UppAddr}"/>
+                <DataGridTextColumn Header="Avlämnings Adr" Binding="{Binding AvAddr}"/>
+                <DataGridTextColumn Header="Start-Ts" Binding="{Binding StartTs}"/>
+                <DataGridTextColumn Header="Prio" Binding="{Binding Prio}"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <Button Grid.Column="1" Grid.Row="1" Content="Connect" Width="100" Height="50"></Button>
-
-        <Button x:Name="Add_Button" Content="Add" Width="100" Height="50" Grid.Column="1" Grid.Row="5"></Button>
-        <Button x:Name="Remove_Button" Content="Remove" Width="100" Height="50" Grid.Column="2" Grid.Row="5"></Button>
+        <Button x:Name="Add_button" Content="Add" Click="Add_button_Click" Height="50" Width="100" Grid.Row="1" Grid.Column="1" ></Button>
+        
     </Grid>
 </Window>
