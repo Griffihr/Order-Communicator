@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -19,17 +24,19 @@ namespace Command_Transmission
     public partial class MainWindow : Window
     {
 
-        private ObservableCollection<Command_Struct> CmdStrct = new ObservableCollection<Command_Struct>();
+
+        public ObservableCollection<Command_Struct> CmdStrct = new ObservableCollection<Command_Struct>();
+
+
 
         public MainWindow()
         {
             InitializeComponent();
 
-            //ObservableCollection<Command_Struct> CmdStrct = new ObservableCollection<Command_Struct>();
-
             CmdStrct.Add(new Command_Struct() {StartTs = 0, Prio = 1});
 
             DG1.ItemsSource = CmdStrct;
+            
         }
 
         public class Command_Struct
@@ -48,7 +55,41 @@ namespace Command_Transmission
 
         private void Add_button_Click(object sender, RoutedEventArgs e)
         {
+            CmdStrct.Add(new Command_Struct() { StartTs = 0, Prio = 1 });
+        }
 
+        private void Connect_Button_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                TcpClient Client = new TcpClient();
+
+                Int32 port = Convert.ToInt32(Port.Text);
+
+                IPAddress Ip_Adr = System.Net.IPAddress.Parse(Convert.ToString(Ip_Adress.Text));
+
+                IPEndPoint EndPoint = new IPEndPoint(Ip_Adr, port);
+
+                Client.Connect(EndPoint);
+
+                NetworkStream NetStream = Client.GetStream();
+
+                StreamReader StrReader = new StreamReader(NetStream, Encoding.UTF8);
+            }
+            catch(ArgumentNullException en)
+            {
+                MessageBox.Show(en.Message);
+            }
+
+            catch(FormatException ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
+            catch(Exception ec)
+            {
+                MessageBox.Show(ec.Message);
+            }
         }
     }
 }
