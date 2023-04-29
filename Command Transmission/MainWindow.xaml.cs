@@ -18,6 +18,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace Command_Transmission
 {
@@ -26,17 +27,16 @@ namespace Command_Transmission
 
 
         public ObservableCollection<Command_Struct> CmdStrct = new ObservableCollection<Command_Struct>();
-
-
+        private DateTime startTime;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            CmdStrct.Add(new Command_Struct() {StartTs = 0, Prio = 1});
+            CmdStrct.Add(new Command_Struct() { StartTs = 0, Prio = 1 });
 
             DG1.ItemsSource = CmdStrct;
-            
+
         }
 
         public class Command_Struct
@@ -47,7 +47,7 @@ namespace Command_Transmission
             public int UppAddr { get; set; }
             public int AvAddr { get; set; }
             public int UppdrAntal { get; set; }
-            public int Prio { get; set; } 
+            public int Prio { get; set; }
             public int StartTs { get; set; }
             public int KördH { get; set; }
 
@@ -76,20 +76,54 @@ namespace Command_Transmission
 
                 StreamReader StrReader = new StreamReader(NetStream, Encoding.UTF8);
             }
-            catch(ArgumentNullException en)
+            catch (ArgumentNullException en)
             {
                 MessageBox.Show(en.Message);
             }
 
-            catch(FormatException ex)
+            catch (FormatException ex)
             {
                 MessageBox.Show(ex.Message);
             }
 
-            catch(Exception ec)
+            catch (Exception ec)
             {
                 MessageBox.Show(ec.Message);
             }
+        }
+
+        private void dispatcherTimer_Tick(object sender, EventArgs e)
+        {
+            Timer.Text = (DateTime.Now - startTime).ToString(@"hh\:mm\:ss");
+        }
+
+
+        private void Start_Button_Click(object sender, RoutedEventArgs e)
+        {
+            Main_Prog();
+        }
+        private void Main_Prog()
+        {
+
+            int StopE = 1, StopD = 1;
+            
+            DispatcherTimer timer = new DispatcherTimer();
+            timer.Tick += dispatcherTimer_Tick;
+            timer.Interval = TimeSpan.FromSeconds(1);
+            startTime = DateTime.Now;
+            timer.Start();
+
+            while (StopD != 0)
+            {
+
+
+
+                if (StopE == 0)
+                {
+                    break;
+                }
+            }
+
         }
     }
 }
