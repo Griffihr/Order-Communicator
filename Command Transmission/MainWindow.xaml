@@ -30,7 +30,7 @@
         </Grid.RowDefinitions>
 
         <DataGrid x:Name="DG1" HorizontalAlignment="Right" Margin="10,10,0,0" Width="1000" Height="500" Grid.Column="3" Grid.Row="1" Grid.RowSpan="8"  
-                  CanUserDeleteRows="True" CanUserAddRows="False" AutoGenerateColumns="False" ItemsSource="{Binding Command_Struct}" >
+                  CanUserDeleteRows="True" CanUserAddRows="False" AutoGenerateColumns="False" DataContext="{Binding CmdStrct}" >
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Maxtid" Binding="{Binding MaxTid}"/>
                 <DataGridTextColumn Header="Antal Uppdrag" Binding="{Binding AntalUpdr}"/>
@@ -58,5 +58,7 @@
         <Button x:Name="Start_Button" Content="Start" Click="Start_Button_Click" Width="100" Height="50" Grid.Column="1" Grid.Row="7" ></Button>
 
         <TextBlock x:Name="Timer" Text="00:00:00" Height="50" Width="100" Grid.Column="2" Grid.Row="5" ></TextBlock>
+        <TextBlock x:Name="EleCount" Text="x" Height="50" Width="100" Grid.Column="1" Grid.Row="5" ></TextBlock>
+
     </Grid>
 </Window>
