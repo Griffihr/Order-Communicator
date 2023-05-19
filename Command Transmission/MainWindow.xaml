@@ -32,14 +32,22 @@
         <DataGrid x:Name="DG1" HorizontalAlignment="Right" Margin="10,10,0,0" Width="1000" Height="500" Grid.Column="3" Grid.Row="1" Grid.RowSpan="8"  
                   CanUserDeleteRows="True" CanUserAddRows="False" AutoGenerateColumns="False" DataContext="{Binding CmdStrct}" >
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Maxtid" Binding="{Binding MaxTid}"/>
-                <DataGridTextColumn Header="Antal Uppdrag" Binding="{Binding AntalUpdr}"/>
-                <DataGridTextColumn Header="Maxantal / h" Binding="{Binding MaxUpdrH}"/>
-                <DataGridTextColumn Header="Körd / h" Binding="{Binding KördH}"/>
-                <DataGridTextColumn Header="Upphämtnings Adr" Binding="{Binding UppAddr}"/>
-                <DataGridTextColumn Header="Avlämnings Adr" Binding="{Binding AvAddr}"/>
-                <DataGridTextColumn Header="Start-Ts" Binding="{Binding StartTs}"/>
-                <DataGridTextColumn Header="Prio" Binding="{Binding Prio}"/>
+                <DataGridTextColumn Header="Maxtid"             Binding="{Binding MaxTid}"/>
+                <DataGridTextColumn Header="Antal Uppdrag"      Binding="{Binding AntalUpdr}"/>
+                <DataGridTextColumn Header="Maxantal / h"       Binding="{Binding MaxUpdrH}"/>
+                <DataGridTextColumn Header="Körd / h"           Binding="{Binding KördH}"/>
+                <DataGridTextColumn Header="Start-Ts"           Binding="{Binding StartTs}"/>
+                <DataGridTextColumn Header="Prio"               Binding="{Binding Prio}"/>
+                <DataGridTextColumn Header="Upphämtnings Adr"   Binding="{Binding UppAddr}"/>
+                <DataGridTextColumn Header="Avlämnings Adr"     Binding="{Binding AvAddr}"/>
+                <DataGridTextColumn Header="P3"                 Binding="{Binding Param3}"/>
+                <DataGridTextColumn Header="P4"                 Binding="{Binding Param4}"/>
+                <DataGridTextColumn Header="P5"                 Binding="{Binding Param5}"/>
+                <DataGridTextColumn Header="P6"                 Binding="{Binding Param6}"/>
+                <DataGridTextColumn Header="P7"                 Binding="{Binding Param7}"/>
+                <DataGridTextColumn Header="P8"                 Binding="{Binding Param8}"/>
+                <DataGridTextColumn Header="P9"                 Binding="{Binding Param9}"/>
+                <DataGridTextColumn Header="P10"                Binding="{Binding Param10}"/>
             </DataGrid.Columns>
         </DataGrid>
 
