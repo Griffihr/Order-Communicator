@@ -29,6 +29,7 @@ namespace Command_Transmission
         public ObservableCollection<Command_Struct> CmdStrct = new ObservableCollection<Command_Struct>();
         private DateTime startTime;
         public DispatcherTimer timer = new DispatcherTimer();
+        private TcpClient tcpClient;
 
         public MainWindow()
         {
@@ -66,13 +67,13 @@ namespace Command_Transmission
 
         }
        
-        private void Connect_Button_Click(object sender, RoutedEventArgs e)
+        public void Connect_Button_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                TcpClient client = new TcpClient();
-                client.Connect(Convert.ToString(Ip_Adress.Text), Convert.ToInt32(Port.Text));
-                NetworkStream netStream = client.GetStream();
+                //tcpClient = new TcpClient();
+                tcpClient.Connect(Convert.ToString(Ip_Adress.Text), Convert.ToInt32(Port.Text));
+                NetworkStream netStream = tcpClient.GetStream();
             }
             catch (ArgumentNullException en)
             {
@@ -93,14 +94,23 @@ namespace Command_Transmission
 
         public void Main_Prog()
         {
+            if (tcpClient == null)
+            {
+                MessageBox.Show("Not connected to simulator");
+                return;
+            }
             int StopE = 1, StopD = 1, i = 1;
+            Byte[] aMessage;
+            NetworkStream nstream = tcpClient.GetStream();
             
             startTime = DateTime.Now;
             timer.Start();
         
             foreach (Command_Struct cmdStrct in CmdStrct)
             {
-                MessageCreate(cmdStrct);
+                aMessage = MessageCreate(cmdStrct);
+                nstream.Write(aMessage);
+                mListener();
             }
         }
         public class Command_Struct
@@ -124,7 +134,7 @@ namespace Command_Transmission
             public int Param10 { get; set; }
         }
         
-       public void MessageCreate(Command_Struct cmdStrct)
+       private Byte[] MessageCreate(Command_Struct cmdStrct)
         {
             Byte b1 = 0x87; Byte b2 = 0xCD; // Header
             Byte b3 = 0x00; Byte b4 = 0x08; // Size of header 
@@ -153,9 +163,20 @@ namespace Command_Transmission
 
             Byte[] aMessage = { b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16, b17, b18, b19, b20, b21, b22, b23, b24, b25, b26, b27, b28, b29, b30, b31, b32, b33, b34 };
 
-            Console.WriteLine(b17);
-            Console.WriteLine(b18);
+            return aMessage;
         }
+        private async void mListener()
+        {
+            NetworkStream netstream = tcpClient.GetStream();
+            Byte[] rBuffer = new byte[40];
 
+            int rBytes = await netstream.ReadAsync(rBuffer, 0, rBuffer.Length);
+
+            
+
+
+            
+
+        }
     }
 }
