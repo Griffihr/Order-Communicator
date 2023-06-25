@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Windows.Themes;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -17,19 +18,23 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using static Command_Transmission.MainWindow;
 
 namespace Command_Transmission
 {
     public partial class MainWindow : Window
-    {
+    {   
         public ObservableCollection<Command_Struct> CmdStrct = new ObservableCollection<Command_Struct>();
         private DateTime startTime;
         public DispatcherTimer timer = new DispatcherTimer();
         private TcpClient tcpClient;
+        public int index = 0;
+        public int i = 0;
 
         public MainWindow()
         {
@@ -45,11 +50,6 @@ namespace Command_Transmission
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
             Timer.Text = (DateTime.Now - startTime).ToString(@"hh\:mm\:ss");
-        }
-
-        private void Start_Button_Click(object sender, RoutedEventArgs e)
-        {
-            Main_Prog();
         }
 
         private void Add_button_Click(object sender, RoutedEventArgs e)
@@ -90,31 +90,75 @@ namespace Command_Transmission
                 MessageBox.Show(ec.Message);
             }
         }
-
-
-        public void Main_Prog()
-        {
+        private void Start_Button_Click(object sender, RoutedEventArgs e)
+        {   
+            /*
             if (tcpClient == null)
             {
                 MessageBox.Show("Not connected to simulator");
                 return;
-            }
-            int StopE = 1, StopD = 1, i = 1;
-            Byte[] aMessage;
-            NetworkStream nstream = tcpClient.GetStream();
-            
+            }          
+            */
+
             startTime = DateTime.Now;
             timer.Start();
-        
-            foreach (Command_Struct cmdStrct in CmdStrct)
+            i = 0;
+
+            Initiate_Order();
+        }
+        public void Initiate_Order()
+        {         
+            Byte[] aMessage;
+            //NetworkStream nstream = tcpClient.GetStream();
+
+            if (i > CmdStrct.Count) i = 0;
+
+            Command_Struct command_struct = CmdStrct[i];
+                
+            if (command_struct.Igång == true)
             {
-                aMessage = MessageCreate(cmdStrct);
-                nstream.Write(aMessage);
-                mListener();
+
+                index = index + 1;
+                if (index > 100) index = 0;
+
+                command_struct.Index = index;
+
+                MessageCreate(command_struct);
+                i++;
+            }
+        }
+        
+        public async Task MainRead()
+        {
+            NetworkStream ns = tcpClient.GetStream();
+            MemoryStream ms = new MemoryStream();
+            int i = 0;
+            
+            while(true)
+            {
+                if (ns.DataAvailable)
+                {
+                    Byte[] rMessage = new Byte[ms.Length];
+                    int bytesToRead = (int)ms.Length;
+                    int bytesRead = 0;
+                    while (bytesToRead> 0)
+                    {
+                        int n = ms.Read(rMessage, bytesRead, bytesToRead);
+                        bytesRead += n;
+                        bytesToRead -= n;
+                    }
+
+                    if (Convert.ToInt32(rMessage[10]) == 62)
+                    {
+
+                    }
+                }
+                
             }
         }
         public class Command_Struct
         {
+            private int index;
             public bool Igång { get; set; }
             public int MaxTid { get; set; }
             public int AntalUpdr { get; set; }
@@ -132,9 +176,13 @@ namespace Command_Transmission
             public int Param8 { get; set; }
             public int Param9 { get; set; }
             public int Param10 { get; set; }
-        }
-        
-       private Byte[] MessageCreate(Command_Struct cmdStrct)
+            public  int Index
+            {
+                get { return index; }
+                set { index = value; }
+            }
+        }      
+        private byte[] MessageCreate(Command_Struct cmdStrct)
         {
             Byte b1 = 0x87; Byte b2 = 0xCD; // Header
             Byte b3 = 0x00; Byte b4 = 0x08; // Size of header 
@@ -164,19 +212,6 @@ namespace Command_Transmission
             Byte[] aMessage = { b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16, b17, b18, b19, b20, b21, b22, b23, b24, b25, b26, b27, b28, b29, b30, b31, b32, b33, b34 };
 
             return aMessage;
-        }
-        private async void mListener()
-        {
-            NetworkStream netstream = tcpClient.GetStream();
-            Byte[] rBuffer = new byte[40];
-
-            int rBytes = await netstream.ReadAsync(rBuffer, 0, rBuffer.Length);
-
-            
-
-
-            
-
         }
     }
 }
