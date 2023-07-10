@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
@@ -26,21 +27,33 @@ using System.Windows.Threading;
 using static Command_Transmission.MainWindow;
 
 namespace Command_Transmission
-{
+{   
     public partial class MainWindow : Window
     {   
         public ObservableCollection<Command_Struct> CmdStrct = new ObservableCollection<Command_Struct>();
         private DateTime startTime;
         public DispatcherTimer timer = new DispatcherTimer();
-        private TcpClient tcpClient;
         public int index = 0;
+        public TcpClient tcpClient = new TcpClient();
         public int i = 0;
+
 
         public MainWindow()
         {
             InitializeComponent();
             timer.Tick += dispatcherTimer_Tick;
             timer.Interval = TimeSpan.FromSeconds(1);
+
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    Ip_Adress.Text = ip.ToString();
+                }
+            }
+
+            Port.Text = "53000";
 
             CmdStrct.Add(new Command_Struct() {Igång = true, StartTs = 0, Prio = 1 });
 
@@ -71,45 +84,36 @@ namespace Command_Transmission
         {
             try
             {
-                //tcpClient = new TcpClient();
-                tcpClient.Connect(Convert.ToString(Ip_Adress.Text), Convert.ToInt32(Port.Text));
+                IPAddress ipAdrs = IPAddress.Parse(Ip_Adress.Text);
+                IPEndPoint ipEndPoint = new IPEndPoint(ipAdrs, Convert.ToInt32(Port.Text));
+                tcpClient.Connect(ipEndPoint);
                 NetworkStream netStream = tcpClient.GetStream();
             }
-            catch (ArgumentNullException en)
-            {
-                MessageBox.Show(en.Message);
-            }
-
-            catch (FormatException ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-
             catch (Exception ec)
             {
                 MessageBox.Show(ec.Message);
             }
-        }
-        private void Start_Button_Click(object sender, RoutedEventArgs e)
-        {   
-            /*
-            if (tcpClient == null)
+        }   
+        private async void Start_Button_Click(object sender, RoutedEventArgs e)
+        {
+            if (tcpClient != null && tcpClient.Client.Connected)
+            {
+                startTime = DateTime.Now;
+                timer.Start();
+                i = 0;
+
+                var task = MainRead();
+                task.Wait();
+            }
+            else
             {
                 MessageBox.Show("Not connected to simulator");
                 return;
-            }          
-            */
-
-            startTime = DateTime.Now;
-            timer.Start();
-            i = 0;
-
-            Initiate_Order();
+            }
         }
-        public void Initiate_Order()
-        {         
-            Byte[] aMessage;
-            //NetworkStream nstream = tcpClient.GetStream();
+        public byte[] Initiate_Order()
+        {
+            var aMessage = new byte[28];
 
             if (i > CmdStrct.Count) i = 0;
 
@@ -126,6 +130,7 @@ namespace Command_Transmission
                 MessageCreate(command_struct);
                 i++;
             }
+            return aMessage;
         }
         
         public async Task MainRead()
@@ -133,28 +138,33 @@ namespace Command_Transmission
             NetworkStream ns = tcpClient.GetStream();
             MemoryStream ms = new MemoryStream();
             int i = 0;
-            
-            while(true)
+
+            Initiate_Order();
+
+            await Task.Run(() =>
             {
-                if (ns.DataAvailable)
+                while (true)
                 {
-                    Byte[] rMessage = new Byte[ms.Length];
-                    int bytesToRead = (int)ms.Length;
-                    int bytesRead = 0;
-                    while (bytesToRead> 0)
+                    if (ns.DataAvailable)
                     {
-                        int n = ms.Read(rMessage, bytesRead, bytesToRead);
-                        bytesRead += n;
-                        bytesToRead -= n;
+                        Byte[] rMessage = new Byte[ms.Length];
+                        int bytesToRead = (int)ms.Length;
+                        int bytesRead = 0;
+                        while (bytesToRead > 0)
+                        {
+                            int n = ms.Read(rMessage, bytesRead, bytesToRead);
+                            bytesRead += n;
+                            bytesToRead -= n;
+                        }
+
+                        if (Convert.ToInt32(rMessage[10]) == 62)
+                        {
+                            Initiate_Order();
+                        }
                     }
 
-                    if (Convert.ToInt32(rMessage[10]) == 62)
-                    {
-
-                    }
                 }
-                
-            }
+            });
         }
         public class Command_Struct
         {
