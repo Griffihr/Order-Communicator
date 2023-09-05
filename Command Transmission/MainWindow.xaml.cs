@@ -33,10 +33,8 @@ namespace Command_Transmission
         public ObservableCollection<Command_Struct> CmdStrct = new ObservableCollection<Command_Struct>();
         private DateTime startTime;
         public DispatcherTimer timer = new DispatcherTimer();
-        public int index = 0;
+        public int index;
         public TcpClient tcpClient = new TcpClient();
-        public int i = 0;
-
 
         public MainWindow()
         {
@@ -53,7 +51,7 @@ namespace Command_Transmission
                 }
             }
 
-            Port.Text = "53000";
+            Port.Text = "30001";
 
             CmdStrct.Add(new Command_Struct() {Igång = true, StartTs = 0, Prio = 1 });
 
@@ -88,22 +86,21 @@ namespace Command_Transmission
                 IPEndPoint ipEndPoint = new IPEndPoint(ipAdrs, Convert.ToInt32(Port.Text));
                 tcpClient.Connect(ipEndPoint);
                 NetworkStream netStream = tcpClient.GetStream();
+                MessageBox.Show("Connected to Manager");
             }
             catch (Exception ec)
             {
                 MessageBox.Show(ec.Message);
             }
         }   
-        private async void Start_Button_Click(object sender, RoutedEventArgs e)
+        private void Start_Button_Click(object sender, RoutedEventArgs e)
         {
             if (tcpClient != null && tcpClient.Client.Connected)
             {
                 startTime = DateTime.Now;
                 timer.Start();
-                i = 0;
-
-                var task = MainRead();
-                task.Wait();
+                index = 0;
+                Task.Run(() => MainRead());
             }
             else
             {
@@ -115,20 +112,17 @@ namespace Command_Transmission
         {
             var aMessage = new byte[28];
 
-            if (i > CmdStrct.Count) i = 0;
+            if (index > CmdStrct.Count) index = 0;
 
-            Command_Struct command_struct = CmdStrct[i];
+            Command_Struct command_struct = CmdStrct[index];
                 
             if (command_struct.Igång == true)
-            {
-
-                index = index + 1;
+            {              
                 if (index > 100) index = 0;
-
                 command_struct.Index = index;
 
                 MessageCreate(command_struct);
-                i++;
+                index++;
             }
             return aMessage;
         }
@@ -137,34 +131,24 @@ namespace Command_Transmission
         {
             NetworkStream ns = tcpClient.GetStream();
             MemoryStream ms = new MemoryStream();
-            int i = 0;
-
-            Initiate_Order();
-
-            await Task.Run(() =>
+            Task<byte[]> task = Initiate_Order();
+            
+            while (true)
             {
-                while (true)
+                if (ns.DataAvailable)
                 {
-                    if (ns.DataAvailable)
+                    Byte[] rMessage = new Byte[ms.Length];
+                    int bytesToRead = (int)ms.Length;
+                    int bytesRead = 0;
+                    while (bytesToRead > 0)
                     {
-                        Byte[] rMessage = new Byte[ms.Length];
-                        int bytesToRead = (int)ms.Length;
-                        int bytesRead = 0;
-                        while (bytesToRead > 0)
-                        {
-                            int n = ms.Read(rMessage, bytesRead, bytesToRead);
-                            bytesRead += n;
-                            bytesToRead -= n;
-                        }
-
-                        if (Convert.ToInt32(rMessage[10]) == 62)
-                        {
-                            Initiate_Order();
-                        }
+                        int n = ms.Read(rMessage, bytesRead, bytesToRead);
+                        bytesRead += n;
+                        bytesToRead -= n;
                     }
-
                 }
-            });
+                Initiate_Order();
+            }
         }
         public class Command_Struct
         {
