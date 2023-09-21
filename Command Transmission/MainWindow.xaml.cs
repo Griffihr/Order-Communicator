@@ -12,6 +12,7 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -35,7 +36,18 @@ namespace Command_Transmission
         public DispatcherTimer timer = new DispatcherTimer();
         public int index;
         public TcpClient tcpClient = new TcpClient();
+        public NetworkStream ns;
+        public int b = 0;
 
+        public class MyViewModel : ObservableObject
+        {
+            private ObservableCollection<Command_Struct> _CmdStrctList;
+            public ObservableCollection<Command_Struct> CmdStrctList
+            {
+                get { return _CmdStrctList; }
+                set { SetProperty(ref _CmdStrctList, value); }
+            }
+        }
         public MainWindow()
         {
             InitializeComponent();
@@ -54,9 +66,8 @@ namespace Command_Transmission
             Port.Text = "30001";
 
             CmdStrct.Add(new Command_Struct() {Igång = true, StartTs = 0, Prio = 1 });
-
             DG1.ItemsSource = CmdStrct;
-
+           
         }
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
@@ -65,19 +76,42 @@ namespace Command_Transmission
 
         private void Add_button_Click(object sender, RoutedEventArgs e)
         {
-            CmdStrct.Add(new Command_Struct() { Igång = true, StartTs = 0, Prio = 1 }); ;
+            CmdStrct.Add(new Command_Struct() { Igång = true, StartTs = 0, Prio = 1 });
+            byte[] messageArray = { 2 };
+            byte Val1 = messageArray[0];
+            byte Val2 = messageArray[1];
+
+            string hVal1 = Val1.ToString();
+            string hVal2 = Val2.ToString();
+
+            string hVal = hVal1 + hVal2;
+
+            Console.WriteLine(hVal1);
+
+            int dVal = Convert.ToInt32(hVal, 16);
+
+            Console.WriteLine(dVal);
         }
 
-        class ObservableObject : INotifyPropertyChanged
+       
+        public class ObservableObject : INotifyPropertyChanged
         {
             public event PropertyChangedEventHandler PropertyChanged;
-            public void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
+            public void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             }
-
+            protected bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)
+            {
+                if (Equals(storage, value)) return false;
+                storage = value;
+                NotifyPropertyChanged(propertyName);
+                return true;
+            }
         }
-       
+
+
+
         public void Connect_Button_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -85,12 +119,16 @@ namespace Command_Transmission
                 IPAddress ipAdrs = IPAddress.Parse(Ip_Adress.Text);
                 IPEndPoint ipEndPoint = new IPEndPoint(ipAdrs, Convert.ToInt32(Port.Text));
                 tcpClient.Connect(ipEndPoint);
-                NetworkStream netStream = tcpClient.GetStream();
+                
+                
+                //NetworkStream ns = tcpClient.GetStream();
+                
+                
                 MessageBox.Show("Connected to Manager");
             }
-            catch (Exception ec)
+            catch (Exception ex)
             {
-                MessageBox.Show(ec.Message);
+                MessageBox.Show(ex.Message);
             }
         }   
         private void Start_Button_Click(object sender, RoutedEventArgs e)
@@ -108,54 +146,97 @@ namespace Command_Transmission
                 return;
             }
         }
-        public byte[] Initiate_Order()
+        public void Initiate_Order()
         {
-            var aMessage = new byte[28];
+            byte[] aMessage = new byte[34];
 
             if (index > CmdStrct.Count) index = 0;
 
             Command_Struct command_struct = CmdStrct[index];
                 
             if (command_struct.Igång == true)
-            {              
+            {               
                 if (index > 100) index = 0;
-                command_struct.Index = index;
+                command_struct.index = index;
 
                 MessageCreate(command_struct);
+
+                ns.Write(aMessage, 0, aMessage.Length);
+
                 index++;
             }
-            return aMessage;
+            return;
         }
         
         public async Task MainRead()
         {
-            NetworkStream ns = tcpClient.GetStream();
-            MemoryStream ms = new MemoryStream();
-            Task<byte[]> task = Initiate_Order();
-            
+            var aMessage = new byte[34];
+                        
             while (true)
-            {
+            {                
+                ns = tcpClient.GetStream();
+                
                 if (ns.DataAvailable)
-                {
-                    Byte[] rMessage = new Byte[ms.Length];
-                    int bytesToRead = (int)ms.Length;
-                    int bytesRead = 0;
-                    while (bytesToRead > 0)
+                {                   
+                    MemoryStream ms = new MemoryStream();
+                    Byte[] rMessage = new Byte[1024];
+                    int bytesToRead;
+                    
+                    while ((bytesToRead = ns.Read(rMessage, 0 ,rMessage.Length)) > 0)
                     {
-                        int n = ms.Read(rMessage, bytesRead, bytesToRead);
-                        bytesRead += n;
-                        bytesToRead -= n;
+                        ms.Write(rMessage, 0, bytesToRead);
                     }
+
+                    StreamReader sr = new StreamReader(ms);
+                    string text1 = Encoding.ASCII.GetString(ms.ToArray());
+
+                    string text2 = sr.ReadToEnd();
+                    Console.Write(text1 + "\n" + text2);
+                    
+                    /*
+                    byte[] messageArray = ms.ToArray();
+                    byte Val1 = messageArray[0];
+                    byte Val2 = messageArray[1];
+
+                    string hVal1 = Val1.ToString();
+                    string hVal2 = Val2.ToString();
+
+                    string hVal = hVal1 + hVal2;
+
+                    Console.WriteLine(hVal1);
+
+                    int dVal = Convert.ToInt32(hVal, 16);
+
+                    Console.WriteLine(dVal);
+                    
+                    switch(dVal)
+                    {
+                       
+                    }
+                    */
                 }
-                Initiate_Order();
+                
+                await Task.Run(() => Initiate_Order());                
+                                   
             }
         }
-        public class Command_Struct
+        public class Command_Struct : ObservableObject
         {
-            private int index;
+            private int _index;
+            public int index 
+            { 
+                get { return _index; }
+                set { SetProperty(ref _index, value); }
+            }
             public bool Igång { get; set; }
             public int MaxTid { get; set; }
-            public int AntalUpdr { get; set; }
+
+            private int _AntalUpdr;
+            public int AntalUpdr 
+            {
+                get { return _AntalUpdr; }
+                set { SetProperty(ref _AntalUpdr, value); }
+            }
             public int MaxUpdrH { get; set; }
             public int Prio { get; set; }
             public int StartTs { get; set; }
@@ -170,12 +251,8 @@ namespace Command_Transmission
             public int Param8 { get; set; }
             public int Param9 { get; set; }
             public int Param10 { get; set; }
-            public  int Index
-            {
-                get { return index; }
-                set { index = value; }
-            }
         }      
+
         private byte[] MessageCreate(Command_Struct cmdStrct)
         {
             Byte b1 = 0x87; Byte b2 = 0xCD; // Header
