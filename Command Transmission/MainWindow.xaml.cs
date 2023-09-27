@@ -187,33 +187,50 @@ namespace Command_Transmission
                         ms.Write(rMessage, 0, bytesToRead);
                     }
 
-                    StreamReader sr = new StreamReader(ms);
-                    string text1 = Encoding.ASCII.GetString(ms.ToArray());
-
-                    string text2 = sr.ReadToEnd();
-                    Console.Write(text1 + "\n" + text2);
-                    
-                    /*
                     byte[] messageArray = ms.ToArray();
-                    byte Val1 = messageArray[0];
-                    byte Val2 = messageArray[1];
 
-                    string hVal1 = Val1.ToString();
-                    string hVal2 = Val2.ToString();
+                    string mVal1 = messageArray[9].ToString("X");
+                    string mVal2 = messageArray[10].ToString("X");
+                    string mVal = mVal1 + mVal2;
 
-                    string hVal = hVal1 + hVal2;
+                    string index = messageArray[14].ToString("X");
 
-                    Console.WriteLine(hVal1);
 
-                    int dVal = Convert.ToInt32(hVal, 16);
 
-                    Console.WriteLine(dVal);
-                    
-                    switch(dVal)
+                    if (mVal == "62")
                     {
-                       
+                        string Val1 = messageArray[0].ToString("X");
+                        string Val2 = messageArray[1].ToString("X");                    
+
+                        string hVal = Val1 + Val2;                       
+
+                        switch (mVal)
+                        {
+                            case "03":
+                                Console.WriteLine("Order" + index + "Finished");
+                                
+                                foreach (Command_Struct cmdstrct in CmdStrct) {
+                                    if (cmdstrct.index == messageArray[14])
+                                    {
+
+                                    }
+                                }
+
+
+
+
+                                break;
+
+                            case "01":
+                                Console.WriteLine("Order Acknowledged");
+                                break;
+                            
+
+                        }
+
+                        
                     }
-                    */
+                    
                 }
                 
                 await Task.Run(() => Initiate_Order());                
