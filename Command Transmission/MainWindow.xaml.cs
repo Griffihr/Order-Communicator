@@ -14,6 +14,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -38,7 +39,20 @@ namespace Command_Transmission
         public TcpClient tcpClient = new TcpClient();
         public NetworkStream ns;
         public int b = 0;
+        private static System.Timers.Timer pTimer;
+        public static Stopwatch pWatch = new Stopwatch();
 
+        private static void setTimer()
+        {
+            pTimer = new System.Timers.Timer(1000);
+            pTimer.Elapsed += timerUpdateUi;
+            pTimer.Enabled = true;
+        }
+
+        private static void timerUpdateUi(Object source, ElapsedEventArgs e)
+        {
+
+        }
         public class MyViewModel : ObservableObject
         {
             private ObservableCollection<Command_Struct> _CmdStrctList;
@@ -51,8 +65,6 @@ namespace Command_Transmission
         public MainWindow()
         {
             InitializeComponent();
-            timer.Tick += dispatcherTimer_Tick;
-            timer.Interval = TimeSpan.FromSeconds(1);
 
             var host = Dns.GetHostEntry(Dns.GetHostName());
             foreach (var ip in host.AddressList)
@@ -179,7 +191,7 @@ namespace Command_Transmission
                 if (ns.DataAvailable)
                 {                   
                     MemoryStream ms = new MemoryStream();
-                    Byte[] rMessage = new Byte[1024];
+                    Byte[] rMessage = new Byte[38];
                     int bytesToRead;
                     
                     while ((bytesToRead = ns.Read(rMessage, 0 ,rMessage.Length)) > 0)
@@ -189,7 +201,7 @@ namespace Command_Transmission
 
                     byte[] messageArray = ms.ToArray();
 
-                    string mVal1 = messageArray[9].ToString("X");
+                    string mVal1 = messageArray[9].ToString("X");   
                     string mVal2 = messageArray[10].ToString("X");
                     string mVal = mVal1 + mVal2;
 
@@ -199,30 +211,29 @@ namespace Command_Transmission
 
                     if (mVal == "62")
                     {
-                        string Val1 = messageArray[0].ToString("X");
+                        
+                        string Val1 = messageArray[0].ToString("X");    
                         string Val2 = messageArray[1].ToString("X");                    
-
                         string hVal = Val1 + Val2;                       
 
                         switch (mVal)
                         {
                             case "03":
                                 Console.WriteLine("Order" + index + "Finished");
+                                pWatch.Stop();
+                                var orderTimer = pWatch.Elapsed;
                                 
-                                foreach (Command_Struct cmdstrct in CmdStrct) {
+                                foreach (Command_Struct cmdstrct in CmdStrct) {                               
                                     if (cmdstrct.index == messageArray[14])
                                     {
-
+                                        cmdstrct.orderTid = orderTimer;
                                     }
                                 }
-
-
-
-
                                 break;
 
                             case "01":
                                 Console.WriteLine("Order Acknowledged");
+                                pWatch.Start();
                                 break;
                             
 
@@ -246,6 +257,7 @@ namespace Command_Transmission
                 set { SetProperty(ref _index, value); }
             }
             public bool Igång { get; set; }
+            public TimeSpan orderTid { get; set; }
             public int MaxTid { get; set; }
 
             private int _AntalUpdr;
