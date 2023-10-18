@@ -76,6 +76,7 @@ namespace Command_Transmission
             }
 
             Port.Text = "30001";
+            index = 0;
 
             CmdStrct.Add(new Command_Struct() {Igång = true, StartTs = 0, Prio = 1 });
             DG1.ItemsSource = CmdStrct;
@@ -89,20 +90,6 @@ namespace Command_Transmission
         private void Add_button_Click(object sender, RoutedEventArgs e)
         {
             CmdStrct.Add(new Command_Struct() { Igång = true, StartTs = 0, Prio = 1 });
-            byte[] messageArray = { 2 };
-            byte Val1 = messageArray[0];
-            byte Val2 = messageArray[1];
-
-            string hVal1 = Val1.ToString();
-            string hVal2 = Val2.ToString();
-
-            string hVal = hVal1 + hVal2;
-
-            Console.WriteLine(hVal1);
-
-            int dVal = Convert.ToInt32(hVal, 16);
-
-            Console.WriteLine(dVal);
         }
 
        
@@ -130,12 +117,7 @@ namespace Command_Transmission
             {
                 IPAddress ipAdrs = IPAddress.Parse(Ip_Adress.Text);
                 IPEndPoint ipEndPoint = new IPEndPoint(ipAdrs, Convert.ToInt32(Port.Text));
-                tcpClient.Connect(ipEndPoint);
-                
-                
-                //NetworkStream ns = tcpClient.GetStream();
-                
-                
+                tcpClient.Connect(ipEndPoint);                      
                 MessageBox.Show("Connected to Manager");
             }
             catch (Exception ex)
@@ -183,28 +165,26 @@ namespace Command_Transmission
         public async Task MainRead()
         {
             var aMessage = new byte[34];
-                        
+            await Task.Run(() => Initiate_Order());
+            
+
             while (true)
-            {                
+            {
                 ns = tcpClient.GetStream();
-                
+
                 if (ns.DataAvailable)
                 {                   
                     MemoryStream ms = new MemoryStream();
                     Byte[] rMessage = new Byte[38];
                     int bytesToRead;
-                    
-                    while ((bytesToRead = ns.Read(rMessage, 0 ,rMessage.Length)) > 0)
+
+                    while ((bytesToRead = ns.Read(rMessage, 0, rMessage.Length)) > 0)
                     {
                         ms.Write(rMessage, 0, bytesToRead);
                     }
 
                     byte[] messageArray = ms.ToArray();
-
-                    string mVal1 = messageArray[9].ToString("X");   
-                    string mVal2 = messageArray[10].ToString("X");
-                    string mVal = mVal1 + mVal2;
-
+                    string mVal = messageArray[9].ToString("X") + messageArray[10].ToString("X");
                     string index = messageArray[14].ToString("X");
 
 
@@ -212,9 +192,7 @@ namespace Command_Transmission
                     if (mVal == "62")
                     {
                         
-                        string Val1 = messageArray[0].ToString("X");    
-                        string Val2 = messageArray[1].ToString("X");                    
-                        string hVal = Val1 + Val2;                       
+                        string hVal = messageArray[0].ToString("X") + messageArray[1].ToString("X");                       
 
                         switch (mVal)
                         {
@@ -226,7 +204,7 @@ namespace Command_Transmission
                                 foreach (Command_Struct cmdstrct in CmdStrct) {                               
                                     if (cmdstrct.index == messageArray[14])
                                     {
-                                        cmdstrct.orderTid = orderTimer;
+                                        cmdstrct.orderTid = orderTimer;                            
                                     }
                                 }
                                 break;
@@ -234,18 +212,12 @@ namespace Command_Transmission
                             case "01":
                                 Console.WriteLine("Order Acknowledged");
                                 pWatch.Start();
+                                await Task.Run(() => Initiate_Order());
                                 break;
-                            
-
-                        }
-
-                        
-                    }
-                    
-                }
-                
-                await Task.Run(() => Initiate_Order());                
-                                   
+                          
+                        }                        
+                    }                    
+                }                                              
             }
         }
         public class Command_Struct : ObservableObject
@@ -257,6 +229,8 @@ namespace Command_Transmission
                 set { SetProperty(ref _index, value); }
             }
             public bool Igång { get; set; }
+
+            
             public TimeSpan orderTid { get; set; }
             public int MaxTid { get; set; }
 
@@ -286,10 +260,10 @@ namespace Command_Transmission
         {
             Byte b1 = 0x87; Byte b2 = 0xCD; // Header
             Byte b3 = 0x00; Byte b4 = 0x08; // Size of header 
-            Byte b5 = 0x00; Byte b6 = 0x14; // Size of message  
+            Byte b5 = 0x00; Byte b6 = 0x14; // Size of message
             Byte b7 = 0x00; Byte b8 = 0x01; // function code
             Byte b9 = 0x00; Byte b10 = 0x71; // q-meddelande
-            Byte b11 = 0x00; Byte b12 = 0x16; // Size of message
+            Byte b11 = 0x00; Byte b12 = 0x16; // Antal Parametrar
 
             Byte b13 = (byte)cmdStrct.StartTs;
             Byte b14 = (byte)cmdStrct.Prio;
