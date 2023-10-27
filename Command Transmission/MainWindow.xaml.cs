@@ -38,8 +38,7 @@ namespace Command_Transmission
         public int index;
         public TcpClient tcpClient = new TcpClient();
         public NetworkStream ns;
-        public int b = 0;
-        private static System.Timers.Timer pTimer;
+        private static System.Timers.Timer? pTimer;
         public static Stopwatch pWatch = new Stopwatch();
 
         private static void setTimer()
@@ -164,19 +163,19 @@ namespace Command_Transmission
         
         public async Task MainRead()
         {
-            var aMessage = new byte[34];
+
             await Task.Run(() => Initiate_Order());
-            
+            ns = tcpClient.GetStream();
 
             while (true)
             {
-                ns = tcpClient.GetStream();
-
+             
                 if (ns.DataAvailable)
                 {                   
+ 
                     MemoryStream ms = new MemoryStream();
                     Byte[] rMessage = new Byte[38];
-                    int bytesToRead;
+                    int bytesToRead = 0;
 
                     while ((bytesToRead = ns.Read(rMessage, 0, rMessage.Length)) > 0)
                     {
@@ -187,35 +186,36 @@ namespace Command_Transmission
                     string mVal = messageArray[9].ToString("X") + messageArray[10].ToString("X");
                     string index = messageArray[14].ToString("X");
 
-
-
                     if (mVal == "62")
                     {
                         
-                        string hVal = messageArray[0].ToString("X") + messageArray[1].ToString("X");                       
-
-                        switch (mVal)
+                        string hVal = messageArray[0].ToString("X") + messageArray[1].ToString("X");
+  
+                        if (hVal == "03")
                         {
-                            case "03":
-                                Console.WriteLine("Order" + index + "Finished");
-                                pWatch.Stop();
-                                var orderTimer = pWatch.Elapsed;
-                                
-                                foreach (Command_Struct cmdstrct in CmdStrct) {                               
-                                    if (cmdstrct.index == messageArray[14])
-                                    {
-                                        cmdstrct.orderTid = orderTimer;                            
-                                    }
-                                }
-                                break;
+                            Console.WriteLine("Order" + index + "Finished");
+                            pWatch.Stop();
+                            var orderTimer = pWatch.Elapsed;
 
-                            case "01":
-                                Console.WriteLine("Order Acknowledged");
-                                pWatch.Start();
-                                await Task.Run(() => Initiate_Order());
-                                break;
-                          
-                        }                        
+                            foreach (Command_Struct cmdstrct in CmdStrct)
+                            {
+                                if (cmdstrct.index == messageArray[14])
+                                {
+                                    cmdstrct.orderTid = orderTimer;
+                                }
+                            }
+                        }
+                      
+                        else if (hVal == "01")
+                        {
+                            Console.WriteLine("Order Acknowledged");
+                            pWatch.Start();
+                            await Task.Run(() => Initiate_Order());
+                        }
+                        else
+                        {
+                            await Task.Run(() => Initiate_Order());
+                        }
                     }                    
                 }                                              
             }
@@ -254,7 +254,7 @@ namespace Command_Transmission
             public int Param8 { get; set; }
             public int Param9 { get; set; }
             public int Param10 { get; set; }
-        }      
+        }
 
         private byte[] MessageCreate(Command_Struct cmdStrct)
         {
@@ -268,11 +268,15 @@ namespace Command_Transmission
             Byte b13 = (byte)cmdStrct.StartTs;
             Byte b14 = (byte)cmdStrct.Prio;
 
-            Byte b15 = (byte)(cmdStrct.UppAddr);     // Första 8 bitarna av Upphämtnings adressen sparas i b15
-            Byte b16 = (byte)(cmdStrct.UppAddr >> 8); // Nästa 8 bitar blir flyttade 8 steg till höger och sparas i b16
+            byte[] UppAddr = BitConverter.GetBytes(cmdStrct.UppAddr);
 
-            Byte b17 = (byte)(cmdStrct.AvAddr);      // Samma princip för avlämnings adress
-            Byte b18 = (byte)(cmdStrct.AvAddr >> 8);
+            Byte b15 = UppAddr[1];
+            Byte b16 = UppAddr[0];
+
+            byte[] AvAddr = BitConverter.GetBytes(cmdStrct.AvAddr);
+
+            Byte b17 = AvAddr[1];
+            Byte b18 = AvAddr[0];
 
             Byte b19 = (byte)(cmdStrct.Param3); Byte b20 = (byte)(cmdStrct.Param3 >> 8);
             Byte b21 = (byte)(cmdStrct.Param4); Byte b22 = (byte)(cmdStrct.Param4 >> 8);
