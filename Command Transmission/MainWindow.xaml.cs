@@ -35,8 +35,9 @@ namespace Command_Transmission
         public ObservableCollection<Command_Struct> CmdStrct = new ObservableCollection<Command_Struct>();
         private DateTime startTime;
         public DispatcherTimer timer = new DispatcherTimer();
-        public int index;
+        public int index = 0;
         public TcpClient tcpClient = new TcpClient();
+        public NetworkStream ns;
         private static System.Timers.Timer? pTimer;
         public static Stopwatch pWatch = new Stopwatch();
 
@@ -51,7 +52,6 @@ namespace Command_Transmission
         {
 
         }
-       
         public class MyViewModel : ObservableObject
         {
             private ObservableCollection<Command_Struct> _CmdStrctList;
@@ -75,8 +75,9 @@ namespace Command_Transmission
             }
 
             Port.Text = "30001";
+            index = 0;
 
-            CmdStrct.Add(new Command_Struct() {Igång = true, StartTs = 1, Prio = 1 });
+            CmdStrct.Add(new Command_Struct() {Igång = true, StartTs = 0, Prio = 1 });
             DG1.ItemsSource = CmdStrct;
            
         }
@@ -87,7 +88,7 @@ namespace Command_Transmission
 
         private void Add_button_Click(object sender, RoutedEventArgs e)
         {
-            CmdStrct.Add(new Command_Struct() { Igång = true, StartTs = 1, Prio = 1 });
+            CmdStrct.Add(new Command_Struct() { Igång = true, StartTs = 0, Prio = 1 });
         }
 
        
@@ -115,8 +116,10 @@ namespace Command_Transmission
             {
                 IPAddress ipAdrs = IPAddress.Parse(Ip_Adress.Text);
                 IPEndPoint ipEndPoint = new IPEndPoint(ipAdrs, Convert.ToInt32(Port.Text));
+
+                using Socket client = new(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp); ;
                 
-                tcpClient.Connect(ipEndPoint);
+                await client.ConnectAsync(ipEndPoint);
                       
                 MessageBox.Show("Connected to Manager");
             }
@@ -127,7 +130,6 @@ namespace Command_Transmission
         }   
         private void Start_Button_Click(object sender, RoutedEventArgs e)
         {
-            
             if (tcpClient != null && tcpClient.Client.Connected)
             {
                 startTime = DateTime.Now;
@@ -140,108 +142,96 @@ namespace Command_Transmission
                 MessageBox.Show("Not connected to simulator");
                 return;
             }
-            
         }
         
-        public void Initiate_Order()
+        public byte[] Initiate_Order()
         {
             byte[] aMessage = new byte[34];
 
-            var ns = tcpClient.GetStream();
-
-            if (index >= CmdStrct.Count) index = 0;
+            if (index > CmdStrct.Count) index = 0;
 
             Command_Struct command_struct = CmdStrct[index];
 
             if (command_struct.Igång == true)
             {
-                
                 if (index > 100) index = 0;
-                
                 command_struct.index = index;
-                command_struct.Igång = false;
-                
-                aMessage = MessageCreate(command_struct);
 
-                ns.Write(aMessage, 0, aMessage.Length);
+                aMessage = MessageCreate(command_struct);
 
                 index++;
             }
-            return;
+            return aMessage;
         }
 
         public async Task MainRead()
         {       
+            var aMessage = new byte[34];
+            Byte[] rMessage = new Byte[38];
+            aMessage = await Task.Run(() => Initiate_Order());
+            
+            NetworkStream ns = tcpClient.GetStream();
+            MemoryStream ms = new MemoryStream();
+            
+            ns.Flush();
+            ns.Write(aMessage, 0, aMessage.Length);
 
-            await Task.Run(() => Initiate_Order());
-
-            var ns = tcpClient.GetStream();
-            var ms = new MemoryStream();
 
             while (true)
             {
-                byte[] rMessage = new byte[256];
 
-                await Task.Run(() => Initiate_Order());
-
-
-                if (ns.DataAvailable) 
-                {
-                    int bytesRead = ns.Read(rMessage, 0, 5);
-                    bytesRead = ns.Read(rMessage, 0, BitConverter.ToInt16(rMessage, 4));   
-                }
-                
-                //int i = BitConverter.ToInt32 (rMessage, 0);
-
-                ///Console.WriteLine(i);
-                
-
-                /*
-
-                byte[] messageArray = ms.ToArray();
-                string mVal = messageArray[9].ToString("X") + messageArray[10].ToString("X");
-                string index = messageArray[14].ToString("X");
-
-
-
-                if (mVal == "62")
+                if (ns.DataAvailable)
                 {
 
-                    string hVal = messageArray[0].ToString("X") + messageArray[1].ToString("X");
 
-                    if (hVal == "03") {       
-                            
-                        Console.WriteLine("Order" + index + "Finished");
-                        pWatch.Stop();
-                        var orderTimer = pWatch.Elapsed;
+                    int bytesToRead;
 
-                        foreach (Command_Struct cmdstrct in CmdStrct)
+                    while ((bytesToRead = ns.Read(rMessage, 0, rMessage.Length)) > 0)
+                    {
+                        ms.Write(rMessage, 0, bytesToRead);
+                    }
+
+                    byte[] messageArray = ms.ToArray();
+                    string mVal = messageArray[9].ToString("X") + messageArray[10].ToString("X");
+                    string index = messageArray[14].ToString("X");
+
+
+
+                    if (mVal == "62")
+                    {
+
+                        string hVal = messageArray[0].ToString("X") + messageArray[1].ToString("X");
+
+                        switch (mVal)
                         {
-                            if (cmdstrct.index == messageArray[14])
-                            {
-                                cmdstrct.orderTid = orderTimer;
-                            }
+                            case "03":
+                                Console.WriteLine("Order" + index + "Finished");
+                                pWatch.Stop();
+                                var orderTimer = pWatch.Elapsed;
+
+                                foreach (Command_Struct cmdstrct in CmdStrct)
+                                {
+                                    if (cmdstrct.index == messageArray[14])
+                                    {
+                                        cmdstrct.orderTid = orderTimer;
+                                    }
+                                }
+                                break;
+
+                            case "01":
+                                Console.WriteLine("Order Acknowledged");
+                                
+                                pWatch.Start();
+                                
+                                await Task.Run(() => Initiate_Order());
+                                
+
+                                
+                                break;
+
                         }
                     }
-
-                    else if (hVal == "01") { 
-                            
-                        Console.WriteLine("Order Acknowledged");
-                                
-                        pWatch.Start();
-                    }
-
-                    else
-                    {
-                            
-                    }
-
-                    await Task.Run(() => Initiate_Order());
-                    ns.WriteAsync(aMessage, 0, aMessage.Length);
-                    
                 }
-                */
-             
             }
         }
         public class Command_Struct : ObservableObject
