@@ -178,62 +178,75 @@ namespace Command_Transmission
             while (true)
             {
                 
-                Console.WriteLine("1");
-                await Task.Run(() => Initiate_Order());
-
 
                 byte[] rMessage = new byte[256];
-                //int bytesToRead = ns.Read(rMessage, 0, rMessage.Length);
-                //int i = BitConverter.ToInt32 (rMessage, 0);
+                
+                
+                if (ns.DataAvailable) 
+                {
+                    int bytesToRead = ns.Read(rMessage, 0, 6);
+                    bytesToRead = ns.Read(rMessage, 0, BitConverter.ToInt16(rMessage, 4));
 
-                ///Console.WriteLine(i);
+                    byte[] messageArray = ms.ToArray();
+                    string mVal = messageArray[9].ToString("X") + messageArray[10].ToString("X");
+                    string index = messageArray[14].ToString("X");
+
+                    if (mVal == "62")
+                    {
+
+                        string hVal = messageArray[0].ToString("X") + messageArray[1].ToString("X");
+
+                        if (hVal == "03")
+                        {
+
+                            Console.WriteLine("Order" + index + "Finished");
+                            pWatch.Stop();
+                            var orderTimer = pWatch.Elapsed;
+
+                            foreach (Command_Struct cmdstrct in CmdStrct)
+                            {
+                                if (cmdstrct.index == messageArray[14])
+                                {
+                                    cmdstrct.orderTid = orderTimer;
+                                }
+                            }
+
+                            await Task.Run(() => Initiate_Order());
+
+
+                        }
+
+                        else if (hVal == "01")
+                        {
+
+                            Console.WriteLine("Order Acknowledged");
+
+                            pWatch.Start();
+
+                            await Task.Run(() => Initiate_Order());
+
+                        }
+
+                        else
+                        {
+                            await Task.Run(() => Initiate_Order());
+                        }
+
+                        //await Task.Run(() => Initiate_Order());
+
+                    }
+                }
+                
+               
+     
                 
 
-                /*
-
-                byte[] messageArray = ms.ToArray();
-                string mVal = messageArray[9].ToString("X") + messageArray[10].ToString("X");
-                string index = messageArray[14].ToString("X");
+                
 
 
 
-                if (mVal == "62")
-                {
-
-                    string hVal = messageArray[0].ToString("X") + messageArray[1].ToString("X");
-
-                    if (hVal == "03") {       
-                            
-                        Console.WriteLine("Order" + index + "Finished");
-                        pWatch.Stop();
-                        var orderTimer = pWatch.Elapsed;
-
-                        foreach (Command_Struct cmdstrct in CmdStrct)
-                        {
-                            if (cmdstrct.index == messageArray[14])
-                            {
-                                cmdstrct.orderTid = orderTimer;
-                            }
-                        }
-                    }
-
-                    else if (hVal == "01") { 
-                            
-                        Console.WriteLine("Order Acknowledged");
-                                
-                        pWatch.Start();
-                    }
-
-                    else
-                    {
-                            
-                    }
-
-                    await Task.Run(() => Initiate_Order());
-                    ns.WriteAsync(aMessage, 0, aMessage.Length);
-                    
-                }
-                */
+               
+                
              
             }
         }
