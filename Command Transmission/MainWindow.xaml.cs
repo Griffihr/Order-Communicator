@@ -207,7 +207,7 @@ namespace Command_Transmission
                             {
                                 if (cmdstrct.index == messageArray[14])
                                 {
-                                    cmdstrct.orderTid = orderTimer;
+                                    cmdstrct.orderTid = orderTimer; 
                                 }
                             }
 
