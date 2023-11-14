@@ -168,35 +168,43 @@ namespace Command_Transmission
         }
 
         public async Task MainRead()
-        {       
-
-            await Task.Run(() => Initiate_Order());
+        {
 
             var ns = tcpClient.GetStream();
             var ms = new MemoryStream();
 
-            while (true)
-            {
-                
+            ns.Flush();
 
-                byte[] rMessage = new byte[256];
-                
-                
+            await Task.Run(() => Initiate_Order());
+
+            byte[] rMessage = new byte[256];
+
+            while (true)
+            { 
+
                 if (ns.DataAvailable) 
                 {
-                    int bytesToRead = ns.Read(rMessage, 0, 6);
-                    bytesToRead = ns.Read(rMessage, 0, BitConverter.ToInt16(rMessage, 4));
 
-                    byte[] messageArray = ms.ToArray();
-                    string mVal = messageArray[9].ToString("X") + messageArray[10].ToString("X");
-                    string index = messageArray[14].ToString("X");
+                    while (rMessage[0] != 135)
+                    {
+                        ns.Read(rMessage, 0, 1);
+                    }
 
-                    if (mVal == "62")
+                    int bytesread = ns.Read(rMessage, 1, 5);
+
+                    int bytesToRead = BitConverter.ToInt16(rMessage, 5);
+
+
+
+                    bytesread = ns.Read(rMessage, 6, bytesToRead);
+                   
+                    int mVal = BitConverter.ToInt16(rMessage, 9);
+                    int index = rMessage[14];
+                    
+                    if (mVal == 98)
                     {
 
-                        string hVal = messageArray[0].ToString("X") + messageArray[1].ToString("X");
-
-                        if (hVal == "03")
+                        if (rMessage[15] == 03)
                         {
 
                             Console.WriteLine("Order" + index + "Finished");
@@ -205,7 +213,7 @@ namespace Command_Transmission
 
                             foreach (Command_Struct cmdstrct in CmdStrct)
                             {
-                                if (cmdstrct.index == messageArray[14])
+                                if (cmdstrct.index == rMessage[14])
                                 {
                                     cmdstrct.orderTid = orderTimer; 
                                 }
@@ -216,7 +224,7 @@ namespace Command_Transmission
 
                         }
 
-                        else if (hVal == "01")
+                        else if (rMessage[15] == 01)
                         {
 
                             Console.WriteLine("Order Acknowledged");
@@ -226,28 +234,16 @@ namespace Command_Transmission
                             await Task.Run(() => Initiate_Order());
 
                         }
-
+                        /*
                         else
                         {
                             await Task.Run(() => Initiate_Order());
                         }
-
-                        //await Task.Run(() => Initiate_Order());
-
+                        */                      
                     }
+                  
+                    Array.Clear(rMessage, 0, rMessage.Length);
                 }
-                
-               
-     
-                
-
-                
-
-
-
-               
-                
-             
             }
         }
         public class Command_Struct : ObservableObject
@@ -290,10 +286,10 @@ namespace Command_Transmission
         {
             Byte b1 = 0x87; Byte b2 = 0xCD; // Header
             Byte b3 = 0x00; Byte b4 = 0x08; // Size of header 
-            Byte b5 = 0x00; Byte b6 = 0x14; // Size of message
+            Byte b5 = 0x00; Byte b6 = 0x16; // Size of message
             Byte b7 = 0x00; Byte b8 = 0x01; // function code
             Byte b9 = 0x00; Byte b10 = 0x71; // q-meddelande
-            Byte b11 = 0x00; Byte b12 = 0x16; // Antal Parametrar
+            Byte b11 = 0x00; Byte b12 = 0x0C; // Antal Parametrar
 
             Byte b13 = (byte)cmdStrct.StartTs;
             Byte b14 = (byte)cmdStrct.Prio;
@@ -316,6 +312,7 @@ namespace Command_Transmission
             Byte b29 = (byte)(cmdStrct.Param8); Byte b30 = (byte)(cmdStrct.Param8 >> 8);
             Byte b31 = (byte)(cmdStrct.Param9); Byte b32 = (byte)(cmdStrct.Param9 >> 8);
             Byte b33 = (byte)(cmdStrct.Param10); Byte b34 = (byte)(cmdStrct.Param10 >> 8);
+
 
             Byte[] aMessage = { b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16, b17, b18, b19, b20, b21, b22, b23, b24, b25, b26, b27, b28, b29, b30, b31, b32, b33, b34 };
 
