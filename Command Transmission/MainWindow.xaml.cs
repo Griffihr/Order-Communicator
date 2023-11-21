@@ -180,7 +180,9 @@ namespace Command_Transmission
             byte[] rMessage = new byte[256];
 
             while (true)
-            { 
+            {
+
+                
 
                 if (ns.DataAvailable) 
                 {
@@ -199,7 +201,7 @@ namespace Command_Transmission
                     bytesread = ns.Read(rMessage, 6, bytesToRead);
                    
                     int mVal = BitConverter.ToInt16(rMessage, 9);
-                    int index = rMessage[14];
+                    int mIndex = rMessage[14];
                     
                     if (mVal == 98)
                     {
@@ -207,16 +209,11 @@ namespace Command_Transmission
                         if (rMessage[15] == 03)
                         {
 
-                            Console.WriteLine("Order" + index + "Finished");
-                            pWatch.Stop();
-                            var orderTimer = pWatch.Elapsed;
+                            Text_Out.AppendText("Order" + mIndex + "Finished \r\n");
 
                             foreach (Command_Struct cmdstrct in CmdStrct)
                             {
-                                if (cmdstrct.index == rMessage[14])
-                                {
-                                    cmdstrct.orderTid = orderTimer; 
-                                }
+                               
                             }
 
                             await Task.Run(() => Initiate_Order());
@@ -227,19 +224,15 @@ namespace Command_Transmission
                         else if (rMessage[15] == 01)
                         {
 
-                            Console.WriteLine("Order Acknowledged");
-
-                            pWatch.Start();
+                            Text_Out.AppendText("Order Acknowledged \r\n");
 
                             await Task.Run(() => Initiate_Order());
 
                         }
-                        /*
                         else
                         {
                             await Task.Run(() => Initiate_Order());
-                        }
-                        */                      
+                        }                      
                     }
                   
                     Array.Clear(rMessage, 0, rMessage.Length);
