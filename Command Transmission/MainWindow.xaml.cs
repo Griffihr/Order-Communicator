@@ -149,6 +149,27 @@ namespace Command_Transmission
 
             var ns = tcpClient.GetStream();
 
+            index = 1;
+
+            foreach (Command_Struct _Command_Struct in CmdStrct)
+            {
+                
+                if (_Command_Struct.Igång == true)
+                {
+                    _Command_Struct.Igång = false;
+                    _Command_Struct.index = index;
+                    aMessage = MessageCreate(_Command_Struct);
+
+                    ns.Write(aMessage, 0, aMessage.Length);
+
+                    return;
+                }
+                
+                index++;
+            }
+
+            /*
+            
             if (index >= CmdStrct.Count) index = 0;
 
             Command_Struct command_struct = CmdStrct[index];
@@ -164,6 +185,7 @@ namespace Command_Transmission
 
                 index++;
             }
+            */
             return;
         }
 
@@ -182,12 +204,14 @@ namespace Command_Transmission
             while (true)
             {
 
+
+                //Check för time per command?
                 
 
                 if (ns.DataAvailable) 
                 {
 
-                    while (rMessage[0] != 135)
+                    while (rMessage[0] != 135 && ns.DataAvailable)
                     {
                         ns.Read(rMessage, 0, 1);
                     }
@@ -195,8 +219,6 @@ namespace Command_Transmission
                     int bytesread = ns.Read(rMessage, 1, 5);
 
                     int bytesToRead = BitConverter.ToInt16(rMessage, 5);
-
-
 
                     bytesread = ns.Read(rMessage, 6, bytesToRead);
                    
@@ -208,12 +230,16 @@ namespace Command_Transmission
 
                         if (rMessage[15] == 03)
                         {
+                            Dispatcher.Invoke(void() => Text_Out.AppendText("Order" + mIndex + "Finished \r\n"));
 
-                            Text_Out.AppendText("Order" + mIndex + "Finished \r\n");
+                            //Text_Out.AppendText("Order" + mIndex + "Finished \r\n");
 
-                            foreach (Command_Struct cmdstrct in CmdStrct)
+                            foreach (Command_Struct _Command_Struct in CmdStrct)
                             {
-                               
+                                if (_Command_Struct.mIndex == mIndex)
+                                {
+                                    _Command_Struct.mIndex = 0;
+                                }
                             }
 
                             await Task.Run(() => Initiate_Order());
@@ -225,6 +251,14 @@ namespace Command_Transmission
                         {
 
                             Text_Out.AppendText("Order Acknowledged \r\n");
+
+                            foreach (Command_Struct _Command_Struct in CmdStrct)
+                            {
+                                if (_Command_Struct.index == index)
+                                {
+                                    _Command_Struct.mIndex = mIndex;
+                                }
+                            }
 
                             await Task.Run(() => Initiate_Order());
 
@@ -248,6 +282,8 @@ namespace Command_Transmission
                 set { SetProperty(ref _index, value); }
             }
             public bool Igång { get; set; }
+
+            public int mIndex;
 
             
             public TimeSpan orderTid { get; set; }
