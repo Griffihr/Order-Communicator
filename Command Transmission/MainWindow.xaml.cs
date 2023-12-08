@@ -39,6 +39,7 @@ namespace Command_Transmission
         public TcpClient tcpClient = new TcpClient();
         private static System.Timers.Timer? pTimer;
         public static Stopwatch pWatch = new Stopwatch();
+        private bool poll;
 
         private static void setTimer()
         {
@@ -154,6 +155,12 @@ namespace Command_Transmission
             foreach (Command_Struct _Command_Struct in CmdStrct)
             {
                 
+                if (_Command_Struct.MaxUpdrH != 0)
+                {
+                    //Check time
+                        //Enble command
+                }
+
                 if (_Command_Struct.Igång == true)
                 {
                     _Command_Struct.Igång = false;
@@ -161,6 +168,7 @@ namespace Command_Transmission
                     aMessage = MessageCreate(_Command_Struct);
 
                     ns.Write(aMessage, 0, aMessage.Length);
+                    poll = false;
 
                     return;
                 }
@@ -168,24 +176,8 @@ namespace Command_Transmission
                 index++;
             }
 
-            /*
-            
-            if (index >= CmdStrct.Count) index = 0;
+            poll = true;
 
-            Command_Struct command_struct = CmdStrct[index];
-
-            if (command_struct.Igång == true)
-            {
-                if (index > 100) index = 0;
-                command_struct.index = index;
-                command_struct.Igång = false;
-                aMessage = MessageCreate(command_struct);
-
-                ns.Write(aMessage, 0, aMessage.Length);
-
-                index++;
-            }
-            */
             return;
         }
 
@@ -194,6 +186,8 @@ namespace Command_Transmission
 
             var ns = tcpClient.GetStream();
             var ms = new MemoryStream();
+            DateTime pollTime = DateTime.Now;
+            TimeSpan secSpan = TimeSpan.FromSeconds(1);
 
             ns.Flush();
 
@@ -204,9 +198,11 @@ namespace Command_Transmission
             while (true)
             {
 
-
-                //Check för time per command?
-                
+                if (poll == true && DateTime.Now.Subtract(pollTime) > secSpan)
+                {
+                    await Task.Run(() => Initiate_Order());
+                    pollTime = DateTime.Now;
+                }
 
                 if (ns.DataAvailable) 
                 {
@@ -232,19 +228,14 @@ namespace Command_Transmission
                         {
                             Dispatcher.Invoke(void() => Text_Out.AppendText("Order" + mIndex + "Finished \r\n"));
 
-                            //Text_Out.AppendText("Order" + mIndex + "Finished \r\n");
-
                             foreach (Command_Struct _Command_Struct in CmdStrct)
                             {
                                 if (_Command_Struct.mIndex == mIndex)
                                 {
                                     _Command_Struct.mIndex = 0;
+                                    _Command_Struct.index = 0;
                                 }
                             }
-
-                            await Task.Run(() => Initiate_Order());
-
-
                         }
 
                         else if (rMessage[15] == 01)
@@ -261,18 +252,19 @@ namespace Command_Transmission
                             }
 
                             await Task.Run(() => Initiate_Order());
-
                         }
+               
                         else
                         {
                             await Task.Run(() => Initiate_Order());
                         }                      
                     }
                   
-                    Array.Clear(rMessage, 0, rMessage.Length);
+                    Array.Clear(rMessage, 0, rMessage.Length);                
                 }
             }
         }
+      
         public class Command_Struct : ObservableObject
         {
             private int _index;
@@ -285,7 +277,8 @@ namespace Command_Transmission
 
             public int mIndex;
 
-            
+            public DateTime lastOrder { get; set; }
+            public DateTime perHour { get; set; }
             public TimeSpan orderTid { get; set; }
             public int MaxTid { get; set; }
 
