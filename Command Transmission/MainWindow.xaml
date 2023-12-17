@@ -33,7 +33,6 @@
                   CanUserDeleteRows="True" CanUserAddRows="False" AutoGenerateColumns="False" DataContext="{Binding CmdStrct}" >
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Maxtid"             Binding="{Binding MaxTid}"/>
-                <DataGridTextColumn Header="Antal Uppdrag"      Binding="{Binding AntalUpdr}"/>
                 <DataGridTextColumn Header="Maxantal / h"       Binding="{Binding MaxUpdrH}"/>
                 <DataGridTextColumn Header="Körd / h"           Binding="{Binding KördH}"/>
                 <DataGridTextColumn Header="Start-Ts"           Binding="{Binding StartTs}"/>
@@ -60,6 +59,8 @@
         <TextBox x:Name="Port" Height="25" Width="200" Margin="0,10" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Bottom"></TextBox>
 
         <Button x:Name="Connect_Button" HorizontalAlignment="Left" Content="Connect" Click="Connect_Button_Click" Height="25" Width="100" Grid.Row="3" Grid.Column="1"></Button>
+
+        <Button x:Name="Cancel_Button" HorizontalAlignment="Left" Content="Cancel Order" Click="Cancel_Button_Click" Height="25" Width="100" Grid.Row="8" Grid.Column="1"></Button>
 
         <Button x:Name="Add_Button" Content="Add" Click="Add_button_Click" Height="50" Width="100" Grid.Row="4" Grid.Column="1" ></Button>
 
