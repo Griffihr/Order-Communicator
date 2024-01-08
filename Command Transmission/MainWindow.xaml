@@ -6,6 +6,10 @@
         xmlns:local="clr-namespace:Command_Transmission"
         mc:Ignorable="d"
         Title="Simulator Command Communicator" Height="720" Width="1280" FontFamily="Seoge UI Light">
+
+
+
+
     <Grid>
 
         <Grid.ColumnDefinitions>
@@ -25,17 +29,20 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="auto" />
+            <RowDefinition />
             <RowDefinition Height="10" />
         </Grid.RowDefinitions>
 
-        <DataGrid x:Name="DG1" Margin="40,10,0,0" Height="400" Grid.Column="3" Grid.Row="1" Grid.RowSpan="8"  
-                  CanUserDeleteRows="True" CanUserAddRows="False" AutoGenerateColumns="False" DataContext="{Binding CmdStrct}" >
+        <DataGrid x:Name="DG1" Margin="40,10,0,0" Grid.Column="3" Grid.Row="1" Grid.RowSpan="10"  
+                  CanUserDeleteRows="True" CanUserAddRows="False" AutoGenerateColumns="False" ItemsSource="{Binding CmdStrct}" Height="291" VerticalAlignment="Top">
             <DataGrid.Columns>
+                <DataGridCheckBoxColumn Header="Enable" Binding="{Binding Enabled}"/>
+                <DataGridTextColumn Header="Avg Tid" IsReadOnly="True"  Binding="{Binding AvgTime, StringFormat='{}{0:mm\\:ss\\.ff}', UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="SM Index" IsReadOnly="True" Binding="{Binding MIndex, UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="Maxtid"             Binding="{Binding MaxTid}"/>
+                <DataGridTextColumn Header="Körda" IsReadOnly="True"    Binding="{Binding OrdersDone, UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="Maxantal / h"       Binding="{Binding MaxUpdrH}"/>
-                <DataGridTextColumn Header="Körd / h"           Binding="{Binding KördH}"/>
-                <DataGridTextColumn Header="Start-Ts"           Binding="{Binding StartTs}"/>
                 <DataGridTextColumn Header="Prio"               Binding="{Binding Prio}"/>
                 <DataGridTextColumn Header="Upphämtnings Adr"   Binding="{Binding UppAddr}"/>
                 <DataGridTextColumn Header="Avlämnings Adr"     Binding="{Binding AvAddr}"/>
@@ -47,29 +54,29 @@
                 <DataGridTextColumn Header="P8"                 Binding="{Binding Param8}"/>
                 <DataGridTextColumn Header="P9"                 Binding="{Binding Param9}"/>
                 <DataGridTextColumn Header="P10"                Binding="{Binding Param10}"/>
+                <DataGridTextColumn Header="Start-Ts"           Binding="{Binding StartTs}"/>
             </DataGrid.Columns>
         </DataGrid>
 
-        <TextBox x:Name="Text_Out" Height="270" Grid.Column="3" Grid.Row="9" Margin="40,5,0,9" Grid.RowSpan="2" HorizontalScrollBarVisibility="Auto" IsReadOnly="True" ></TextBox>
+        <TextBox x:Name="Text_Out" Grid.Column="3" Grid.Row="10" Margin="40,85,0,5" HorizontalScrollBarVisibility="Auto" IsReadOnly="True"/>
 
-        <TextBlock Text="Ip-Adress" Height="25" Width="100" FontSize="15" Grid.Column="1" Grid.Row="1" VerticalAlignment="Top" Margin="10,10" HorizontalAlignment="Left"></TextBlock>
-        <TextBox x:Name="Ip_Adress" Text="0.0.0.0" Height="25" Width="200" Margin="0,10" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2" VerticalAlignment="Bottom"></TextBox>
+        <TextBlock Text="Ip-Adress" Height="25" Width="100" FontSize="15" Grid.Column="1" Grid.Row="1" VerticalAlignment="Top" Margin="0,10,0,0" HorizontalAlignment="Left"/>
+        <TextBox x:Name="Ip_Adress" Text="0.0.0.0" Margin="0, 0, 0, 0" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2"/>
 
-        <TextBlock Text="Port" Height="25" Width="100" FontSize="15" Grid.Column="1" Grid.Row="2" VerticalAlignment="Top" Margin="10,10" HorizontalAlignment="Left"></TextBlock>
-        <TextBox x:Name="Port" Height="25" Width="200" Margin="0,10" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Bottom"></TextBox>
+        <TextBlock Text="Port" Height="25" Width="100" FontSize="15" Grid.Column="1" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+        <TextBox x:Name="Port" Margin="0,8,20,8" Grid.Column="1" Grid.Row="4" Grid.ColumnSpan="2"/>
 
-        <Button x:Name="Connect_Button" HorizontalAlignment="Left" Content="Connect" Click="Connect_Button_Click" Height="25" Width="100" Grid.Row="3" Grid.Column="1"></Button>
+        <Button x:Name="Connect_Button" HorizontalAlignment="Center" Content="Connect" Click="Connect_Button_Click" Width="100" Grid.Row="5" Grid.Column="1" Margin="0,2,0,2"/>
 
-        <Button x:Name="Cancel_Button" HorizontalAlignment="Left" Content="Cancel Order" Click="Cancel_Button_Click" Height="25" Width="100" Grid.Row="8" Grid.Column="1"></Button>
+        <Button x:Name="Cancel_Button" HorizontalAlignment="Center" Content="Cancel Order" Click="Cancel_Button_Click" Width="100" Grid.Row="6" Grid.Column="1" Margin="0,2,0,2"/>
 
-        <Button x:Name="Add_Button" Content="Add" Click="Add_button_Click" Height="50" Width="100" Grid.Row="4" Grid.Column="1" ></Button>
+        <Button x:Name="Stop_Button" HorizontalAlignment="Center" Content="Stop" Click="Stop_Button_Click" Width="100" Grid.Row="7" Grid.Column="1" Margin="0,2,0,2"/>
 
-        <TextBlock x:Name="Connect" Width="100" Height="50" Grid.Column="1" Grid.Row="6" FontSize="10" ></TextBlock>
+        <Button x:Name="Add_Button" Content="Add" Click="Add_button_Click" Grid.Row="8" Grid.Column="1" Margin="10,2,10,2" />
 
-        <Button x:Name="Start_Button" Content="Start" Click="Start_Button_Click" Width="100" Height="50" Grid.Column="1" Grid.Row="7" ></Button>
+        <TextBlock x:Name="Connect" Grid.Column="1" Grid.Row="9" FontSize="10" Margin="10,2,10,2" />
 
-        <TextBlock x:Name="Timer" Text="00:00:00" Height="50" Width="100" Grid.Column="2" Grid.Row="5" ></TextBlock>
-        <TextBlock x:Name="EleCount" Text="x" Height="50" Width="100" Grid.Column="1" Grid.Row="5" ></TextBlock>
+        <Button x:Name="Start_Button" Content="Start" Click="Start_Button_Click" Grid.Column="1" Grid.Row="9" Margin="10,2,10,2" />
 
     </Grid>
 </Window>
