@@ -127,79 +127,72 @@ namespace Command_Transmission
 
 
         public async Task MainRead()
-        {
-            try
+        {            
+            var ns = tcpClient.GetStream();
+
+            DateTime pollTime = DateTime.Now;
+            TimeSpan secSpan = TimeSpan.FromSeconds(1);
+
+            ns.Flush();
+
+            Initiate_Order();
+
+            byte[] rMessage = new byte[60];
+
+            while (mainProgRun == true)
             {
-
-            
-                var ns = tcpClient.GetStream();
-
-                DateTime pollTime = DateTime.Now;
-                TimeSpan secSpan = TimeSpan.FromSeconds(1);
-
-                ns.Flush();
-
-                Initiate_Order();
-
-                byte[] rMessage = new byte[60];
-
-                while (true)
+                if (poll == true)
                 {
-                    if (poll == true)
+                    /*
+                    TimeSpan diff = DateTime.Now.Subtract(pollTime);
+                    if (diff > secSpan)
                     {
-                        /*
-                        TimeSpan diff = DateTime.Now.Subtract(pollTime);
-                        if (diff > secSpan)
-                        {
-                            Initiate_Order();
-                            pollTime = DateTime.Now;
-                        }
-                        */
+                        Initiate_Order();
+                        pollTime = DateTime.Now;
+                    }
+                    */
+                    Initiate_Order();
+                }
+
+                if (rMessage[0] == 135)
+                {
+
+                    int bytesread = ns.Read(rMessage, 1, 5);
+
+                    int bytesToRead = BitConverter.ToInt16(rMessage, 5);
+
+                    bytesread = ns.Read(rMessage, 6, bytesToRead);
+
+                    Byte[] mValByte = { rMessage[9], rMessage[8] };
+                    Byte[] mIndexByte = { rMessage[13], rMessage[12] };
+
+                    int mVal = BitConverter.ToInt16(mValByte);
+                    int mIndex = BitConverter.ToInt16(mIndexByte);
+
+                    if (mVal == 98)
+                    {
+                        BMessage(rMessage[15], mIndex);
                         Initiate_Order();
                     }
 
-                    if (rMessage[0] == 135)
+                    else if (mVal == 115)
                     {
+                        Byte[] bArray = { rMessage[17], rMessage[16] };
+                        short bType = BitConverter.ToInt16(bArray, 0);
 
-                        int bytesread = ns.Read(rMessage, 1, 5);
-
-                        int bytesToRead = BitConverter.ToInt16(rMessage, 5);
-
-                        bytesread = ns.Read(rMessage, 6, bytesToRead);
-
-                        Byte[] mValByte = { rMessage[9], rMessage[8] };
-                        Byte[] mIndexByte = { rMessage[13], rMessage[12] };
-
-                        int mVal = BitConverter.ToInt16(mValByte);
-                        int mIndex = BitConverter.ToInt16(mIndexByte);
-
-                        if (mVal == 98)
-                        {
-                            BMessage(rMessage[15], mIndex);
-                            Initiate_Order();
-                        }
-
-                        else if (mVal == 115)
-                        {
-
-                            Byte[] bArray = { rMessage[17], rMessage[16] };
-                            short bType = BitConverter.ToInt16(bArray, 0);
-
-                            SMessage(bType, mIndex);
-                        }
-
-                        Array.Clear(rMessage, 0, rMessage.Length);
+                        SMessage(bType, mIndex);
                     }
-                    else
-                    {
-                        ns.Read(rMessage, 0, 1);
-                    }
+
+                    Array.Clear(rMessage, 0, rMessage.Length);
+                }
+                else
+                {
+                    ns.Read(rMessage, 0, 1);
                 }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Run error or Prog stop \r\n")));
+
+            return;
         }
 
         public void Initiate_Order()
@@ -216,17 +209,21 @@ namespace Command_Transmission
 
                     if (tsLastOrder > tsPerOrder && _Command_Struct.TimeRun == true)
                     {
+                        Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Kör true \r\n")));
                         _Command_Struct.Run = true;
                         _Command_Struct.TimeRun = false;
                     }
                     else
                     {
+                        Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Kör false \r\n")));
                         _Command_Struct.Run = false;
                     }
                 }
 
                 if (_Command_Struct.Run == true && _Command_Struct.Enabled == true) // Checkar att uppdraget ska köra, skapar meddelandet och skickar till System managern.
                 {
+
+                    Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Kör meddelande start \r\n")));
                     _Command_Struct.Run = false;
                     _Command_Struct.Index = index;
 
@@ -236,6 +233,8 @@ namespace Command_Transmission
                     var ns = tcpClient.GetStream();
                     ns.Write(aMessage, 0, aMessage.Length);
 
+                    Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Kör meddelande  end\r\n")));
+
                     poll = false;
                     return;
                 }
@@ -243,6 +242,11 @@ namespace Command_Transmission
                 index++;
 
             }
+
+            Dispatcher.Invoke((Action)(() => Text_Out.AppendText("poll ture \r\n")));
+
+            poll = true;
+
             return;
         }
 
@@ -283,7 +287,8 @@ namespace Command_Transmission
                     break;
 
                 case 01: // Order Acknowledged
-                    Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Acknowledged \r\n")));
+
+                    Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Acknowledged Start \r\n")));
 
                     foreach (Command_Struct _Command_Struct in CmdStrct)
                     {
@@ -291,22 +296,27 @@ namespace Command_Transmission
                         {
                             _Command_Struct.MIndex = mIndex;
                             
-                            if ((_Command_Struct.Prio <= LastOrderPrio) || (LastOrderMindex == 0)) {
+                            if (_Command_Struct.Prio <= LastOrderPrio || LastOrderMindex == 0) {
                                 LastOrderMindex = mIndex;
                                 LastOrderPrio = _Command_Struct.Prio;
                             }                            
                         }
                     }
 
+                    Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Acknowledged  End \r\n")));
+
+                    //Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Acknowledged \r\n")));
+
                     break;
 
                 case 03: // Order Finished
-                    Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Finished \r\n")));
+
+                   // Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Finished starty \r\n")));
 
                     pWatch.Stop();
                     TimeSpan ts = pWatch.Elapsed;
                     pWatch.Reset();
-
+                    
                     foreach (Command_Struct _Command_Struct in CmdStrct)
                     {                   
                         if (_Command_Struct.MIndex == mIndex)
@@ -324,6 +334,10 @@ namespace Command_Transmission
                         }
                     }
 
+                    //Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Finished  end \r\n")));
+
+                    Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Finished \r\n")));
+
                     break;
 
             }
@@ -331,6 +345,7 @@ namespace Command_Transmission
 
         public void enableCommands()
         {
+            Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Enable commands start")));
             foreach (Command_Struct _Command_Struct in CmdStrct)
             {
                 _Command_Struct.MIndex = 0;
@@ -340,6 +355,7 @@ namespace Command_Transmission
                     _Command_Struct.Run = true;
                 }
             }
+            Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Enable commands done")));
         }
 
         public class Command_Struct : ObservableObject
