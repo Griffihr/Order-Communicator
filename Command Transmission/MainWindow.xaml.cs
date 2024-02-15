@@ -29,20 +29,23 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using static Command_Transmission.MainWindow;
+using static System.Net.Mime.MediaTypeNames;
+using static Command_Transmission.ViewListWindow;
 
 namespace Command_Transmission
 {   
     public partial class MainWindow : Window
     {   
-        public ObservableCollection<Command_Struct> CmdStrct = new ObservableCollection<Command_Struct>();
+        public static ObservableCollection<Command_Struct> CmdStrct = new ObservableCollection<Command_Struct>();
         private DateTime startTime;
-        public int index;
         public TcpClient tcpClient = new TcpClient();
         public static Stopwatch pWatch = new Stopwatch();
         private bool poll;
         private bool mainProgRun;
         private int LastOrderMindex;
-        private int LastOrderPrio;
+        private int CurrentOrderMindex = 0;
+        private int LastOrderPrio = 228;
+        public System.Timers.Timer _Timer;
         public MainWindow()
         {
             InitializeComponent();
@@ -56,12 +59,22 @@ namespace Command_Transmission
                 }
             }
 
+            setTimer();
+
             Port.Text = "30001";
-            CmdStrct.Add(new Command_Struct() { Enabled = true, Run = true, StartTs = 1, Prio = 1 , TimeRun = true});
+            CmdStrct.Add(new Command_Struct() { Enabled = true, Run = true, StartTs = 1, Prio = 0 , TimeRun = true});
+            
             DG1.ItemsSource = CmdStrct;
             this.DataContext = this;
            
         }
+
+        private void setTimer()
+        {
+            _Timer = new System.Timers.Timer(1000);
+            _Timer.Elapsed += OnTimedEvent;
+            _Timer.AutoReset = true;
+        } 
         public class ObservableObject : INotifyPropertyChanged
         {
             public event PropertyChangedEventHandler PropertyChanged;
@@ -75,11 +88,11 @@ namespace Command_Transmission
         {
             if (mainProgRun == true)
             {
-                CmdStrct.Add(new Command_Struct() { Enabled = true, Run = true, StartTs = 1, Prio = 1, TimeRun = true });
+                CmdStrct.Add(new Command_Struct() { Enabled = false, Run = true, StartTs = 1, Prio = 0, TimeRun = true});
             }
             else
             {
-                CmdStrct.Add(new Command_Struct() { Enabled = true, Run = true, StartTs = 1, Prio = 1, TimeRun = true });
+                CmdStrct.Add(new Command_Struct() { Enabled = true, Run = true, StartTs = 1, Prio = 0, TimeRun = true});
             }        
         }
 
@@ -99,15 +112,14 @@ namespace Command_Transmission
                 MessageBox.Show(ex.Message);
             }
         }
-        private void Start_Button_Click(object sender, RoutedEventArgs e)
+        private async void Start_Button_Click(object sender, RoutedEventArgs e)
         {
 
             if (tcpClient != null && tcpClient.Client.Connected)
             {
                 startTime = DateTime.Now;
                 mainProgRun = true;
-                index = 0;
-                Task.Run(() => MainRead());
+                await Task.Run(() => MainRead());
             }
             else
             {
@@ -118,42 +130,90 @@ namespace Command_Transmission
         }
         private void Cancel_Button_Click(object sender, RoutedEventArgs e)
         {
+            var CancelmIndexList = new List<int>();
+            foreach (var CancelIndex in DG1.SelectedItems)
+            {
+                int index = DG1.Items.IndexOf(CancelIndex);
+                CmdStrct[index].Enabled = false;
+                CancelmIndexList.Add(CmdStrct[index].MIndex);
+            }
 
+            CancelTasks(CancelmIndexList);
         }
         private void Stop_Button_Click(object sender, RoutedEventArgs e)
         {
+            Text_Out.AppendText("Program stopped");
+            Text_Out.CaretIndex = Text_Out.Text.Length;
+            Text_Out.ScrollToEnd();
             mainProgRun = false;
         }
 
+        public void OnTimedEvent( Object State, ElapsedEventArgs e)
+        {
+            Initiate_Order();
+        }
 
-        public async Task MainRead()
+
+        public void MainRead()
         {            
             var ns = tcpClient.GetStream();
+            var clearBuffer = new byte[4096];
+            while (ns.DataAvailable)
+            {
+                ns.Read(clearBuffer, 0 , clearBuffer.Length);
+            }
+
 
             DateTime pollTime = DateTime.Now;
             TimeSpan secSpan = TimeSpan.FromSeconds(1);
 
-            ns.Flush();
-
             Initiate_Order();
-
-            byte[] rMessage = new byte[60];
 
             while (mainProgRun == true)
             {
-                if (poll == true)
-                {
-                    /*
-                    TimeSpan diff = DateTime.Now.Subtract(pollTime);
-                    if (diff > secSpan)
-                    {
-                        Initiate_Order();
-                        pollTime = DateTime.Now;
-                    }
-                    */
-                    Initiate_Order();
-                }
 
+                if (ns.DataAvailable)
+                {
+                    var rMessage = ReadAsync();
+
+                    if (rMessage[0] == 135) 
+                    { 
+                        Byte[] mValByte = { rMessage[9], rMessage[8] };
+                        Byte[] mIndexByte = { rMessage[13], rMessage[12] };
+
+                        int mVal = BitConverter.ToInt16(mValByte);
+                        int mIndex = BitConverter.ToInt16(mIndexByte);
+
+                        if (mVal == 98)
+                        {
+                            BMessage(rMessage[15], mIndex);
+
+
+                            Initiate_Order();
+                        }
+
+                        else if (mVal == 115)
+                        {
+                            Byte[] bArray = { rMessage[17], rMessage[16] };
+                            short bType = BitConverter.ToInt16(bArray, 0);
+
+                            SMessage(bType, mIndex);
+                        }
+
+                        Array.Clear(rMessage, 0, rMessage.Length);
+ 
+                    }
+                }
+            }
+
+            return;
+        }
+        public byte[] ReadAsync()
+        {
+            var rMessage = new byte[60];
+            var ns = tcpClient.GetStream();
+            while (ns.DataAvailable)
+            { 
                 if (rMessage[0] == 135)
                 {
 
@@ -163,41 +223,21 @@ namespace Command_Transmission
 
                     bytesread = ns.Read(rMessage, 6, bytesToRead);
 
-                    Byte[] mValByte = { rMessage[9], rMessage[8] };
-                    Byte[] mIndexByte = { rMessage[13], rMessage[12] };
+                    return rMessage;
 
-                    int mVal = BitConverter.ToInt16(mValByte);
-                    int mIndex = BitConverter.ToInt16(mIndexByte);
-
-                    if (mVal == 98)
-                    {
-                        BMessage(rMessage[15], mIndex);
-                        Initiate_Order();
-                    }
-
-                    else if (mVal == 115)
-                    {
-                        Byte[] bArray = { rMessage[17], rMessage[16] };
-                        short bType = BitConverter.ToInt16(bArray, 0);
-
-                        SMessage(bType, mIndex);
-                    }
-
-                    Array.Clear(rMessage, 0, rMessage.Length);
                 }
                 else
                 {
                     ns.Read(rMessage, 0, 1);
                 }
             }
-            Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Run error or Prog stop \r\n")));
 
-            return;
+            return rMessage;
         }
 
         public void Initiate_Order()
         {                    
-            index = 1;
+            int index = 1;
             
             foreach (Command_Struct _Command_Struct in CmdStrct)
             {
@@ -207,15 +247,16 @@ namespace Command_Transmission
                     TimeSpan tsPerOrder = TimeSpan.FromHours(1) / _Command_Struct.MaxUpdrH;
                     TimeSpan tsLastOrder = DateTime.Now.Subtract(_Command_Struct.OrderStartTime);
 
-                    if (tsLastOrder > tsPerOrder && _Command_Struct.TimeRun == true)
+
+
+                    if (TimeSpan.Compare(tsLastOrder, tsPerOrder) == 1 && _Command_Struct.TimeRun == true && CurrentOrderMindex != LastOrderMindex)
                     {
-                        Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Kör true \r\n")));
                         _Command_Struct.Run = true;
                         _Command_Struct.TimeRun = false;
+                        _Timer.Stop();
                     }
-                    else
+                    else if (TimeSpan.Compare(tsLastOrder, tsPerOrder) <= 0)
                     {
-                        Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Kör false \r\n")));
                         _Command_Struct.Run = false;
                     }
                 }
@@ -223,7 +264,6 @@ namespace Command_Transmission
                 if (_Command_Struct.Run == true && _Command_Struct.Enabled == true) // Checkar att uppdraget ska köra, skapar meddelandet och skickar till System managern.
                 {
 
-                    Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Kör meddelande start \r\n")));
                     _Command_Struct.Run = false;
                     _Command_Struct.Index = index;
 
@@ -233,19 +273,58 @@ namespace Command_Transmission
                     var ns = tcpClient.GetStream();
                     ns.Write(aMessage, 0, aMessage.Length);
 
-                    Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Kör meddelande  end\r\n")));
-
-                    poll = false;
                     return;
+
                 }
 
                 index++;
 
             }
 
-            Dispatcher.Invoke((Action)(() => Text_Out.AppendText("poll ture \r\n")));
+            _Timer.Start();
 
-            poll = true;
+            return;
+        }
+
+        public void TextBoxAppend(string text)
+        {
+            Text_Out.AppendText(text);
+            Text_Out.CaretIndex = Text_Out.Text.Length;
+            Text_Out.ScrollToEnd();
+            return;
+        }
+
+        public void CancelTasks(List<int> CancelmIndex)
+        {
+
+            try
+            {
+                var ns = tcpClient.GetStream();
+
+                foreach (var _CancelmIndex in CancelmIndex)
+                {
+
+                    ViewList.Remove(ViewList.FirstOrDefault(x => x.MIndex == _CancelmIndex));
+
+                    foreach (Command_Struct _Command_Struct in CmdStrct)
+                    {
+                        if (_Command_Struct.MIndex == _CancelmIndex)
+                        {
+                            _Command_Struct.Enabled = false;
+                            var nMessage = nMessageCreate(_Command_Struct);
+                            ns.Write(nMessage, 0, nMessage.Length);
+                        }
+                    }
+
+
+                }
+            }
+
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            
 
             return;
         }
@@ -256,6 +335,14 @@ namespace Command_Transmission
         {
             switch (type)
             {
+                case 4096: //Order ready to pick up
+                    {
+                        Dispatcher.Invoke(() => TextBoxAppend("Order " + mIndex + " Ready to pick upp \r\n"));
+                        break;
+                    }
+
+
+
                 case 4097: //Order Loaded
                     {
                         foreach (Command_Struct _Command_Struct in CmdStrct)
@@ -267,8 +354,10 @@ namespace Command_Transmission
 
                                 pWatch.Start();
 
-
-                                Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Picked up \r\n")));                            
+                                CurrentOrderMindex = mIndex;
+                             
+                                Dispatcher.Invoke(() => TextBoxAppend("Order " + mIndex + " Picked up \r\n"));                          
+                                
                             }
                         }
                         break;
@@ -283,40 +372,50 @@ namespace Command_Transmission
             {
                 case 00: // Order Rejected
 
-                    Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Rejected \r\n")));
+                    Dispatcher.Invoke(() => TextBoxAppend("Order " + mIndex + " Rejected \r\n"));
                     break;
 
                 case 01: // Order Acknowledged
 
-                    Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Acknowledged Start \r\n")));
+                    int AckInd = 1;
 
                     foreach (Command_Struct _Command_Struct in CmdStrct)
                     {
-                        if (_Command_Struct.Index == index)
+
+                        if (_Command_Struct.Index == AckInd && _Command_Struct.MIndex == 0)
                         {
                             _Command_Struct.MIndex = mIndex;
-                            
-                            if (_Command_Struct.Prio <= LastOrderPrio || LastOrderMindex == 0) {
+
+                            VisualCommand_Struct _VisualCommand_Struct = ViewListWindow.ViewListStruct(_Command_Struct);
+
+                            Dispatcher.Invoke(() => ViewListWindow.ViewList.Add(_VisualCommand_Struct));
+
+                            Dispatcher.Invoke(() => TextBoxAppend("Order " + mIndex + " Acknowledged \r\n"));
+
+                            //bool test = _Command_Struct.Prio <= LastOrderPrio || LastOrderPrio == 228; //Testar om Prio värdet på meddelandet är samma eller lägre än föregående sista meddelandes eller om det inte finns något värde sparat.
+
+                            if (_Command_Struct.Prio <= LastOrderPrio && _Command_Struct.MaxUpdrH == 0) {
                                 LastOrderMindex = mIndex;
                                 LastOrderPrio = _Command_Struct.Prio;
-                            }                            
+                            }
+
+                            return;
                         }
+
+                        AckInd++;
+
                     }
-
-                    Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Acknowledged  End \r\n")));
-
-                    //Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Acknowledged \r\n")));
 
                     break;
 
                 case 03: // Order Finished
 
-                   // Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Finished starty \r\n")));
-
                     pWatch.Stop();
                     TimeSpan ts = pWatch.Elapsed;
                     pWatch.Reset();
-                    
+
+                    int i = 0;
+
                     foreach (Command_Struct _Command_Struct in CmdStrct)
                     {                   
                         if (_Command_Struct.MIndex == mIndex)
@@ -325,18 +424,29 @@ namespace Command_Transmission
 
                             _Command_Struct.TimeRun = true;
 
+                            VisualCommand_Struct _VisualCommand_Struct = ViewListWindow.ViewListStruct(_Command_Struct);
+
+                            Dispatcher.Invoke(() => ViewListWindow.ViewList.Remove(_VisualCommand_Struct));
+
+                            if (_Command_Struct.MaxUpdrH != 0)
+                            {
+                                _Command_Struct.MIndex = 0;
+                                _Command_Struct.Index = 0;
+                            }
+                                           
                             if (mIndex == LastOrderMindex)
                             {
                                 enableCommands();
-                                LastOrderMindex = 0;
-                                LastOrderPrio = 0;
+                                LastOrderPrio = 228;
+                                Initiate_Order();
                             }
                         }
+
+                        i++;
+
                     }
 
-                    //Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Finished  end \r\n")));
-
-                    Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Order " + mIndex + " Finished \r\n")));
+                    Dispatcher.Invoke(() => TextBoxAppend("Order " + mIndex + " Finished \r\n"));
 
                     break;
 
@@ -345,17 +455,15 @@ namespace Command_Transmission
 
         public void enableCommands()
         {
-            Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Enable commands start")));
             foreach (Command_Struct _Command_Struct in CmdStrct)
             {
-                _Command_Struct.MIndex = 0;
-                _Command_Struct.Index = 0;
-                if (_Command_Struct.Enabled == true)
+                if (_Command_Struct.Enabled == true && _Command_Struct.MaxUpdrH == 0)
                 {
+                    _Command_Struct.MIndex = 0;
+                    _Command_Struct.Index = 0;
                     _Command_Struct.Run = true;
                 }
             }
-            Dispatcher.Invoke((Action)(() => Text_Out.AppendText("Enable commands done")));
         }
 
         public class Command_Struct : ObservableObject
@@ -384,7 +492,7 @@ namespace Command_Transmission
 
                 AvgTime = RoundedTs;
             }
-            private int _index = 0; // Index för att länka lokalt och System manager uppdrag.
+            private int _index; // Index för att länka lokalt och System manager uppdrag.
             public int Index 
             { 
                 get { return _index; }
@@ -417,9 +525,28 @@ namespace Command_Transmission
                 }
             }// Index från System manager
 
-            public bool TimeRun { get; set; }
+            private bool _TimeRun = true;
+            public bool TimeRun
+            { 
+                get { return _TimeRun; }
+                set
+                {
+                    _TimeRun = value;
+                    OnPropertyChanged();
+                } 
+            }
             public bool Run { get; set; }
-            public bool Enabled { get; set; }
+
+            private bool _Enabled;
+            public bool Enabled 
+            { 
+                get { return _Enabled; } 
+                set
+                {
+                    _Enabled = value;
+                    OnPropertyChanged();
+                }
+            }
 
             private DateTime _OrderStartTime = DateTime.Now.AddHours(-1);
             public DateTime OrderStartTime 
@@ -503,6 +630,15 @@ namespace Command_Transmission
             return aMessage;
         }
 
+        private void ManualRun_Button_Click(object sender, RoutedEventArgs e)
+        {
 
+        }
+
+        private void ViewListButton_Click(object sender, RoutedEventArgs e)
+        {
+            ViewListWindow _ViewListWindow = new ViewListWindow();
+            _ViewListWindow.Show();
+        }
     }
 }
