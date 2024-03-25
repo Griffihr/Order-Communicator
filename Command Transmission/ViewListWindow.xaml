@@ -5,29 +5,23 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Command_Transmission"
         mc:Ignorable="d"
-        Loaded="Window_Loaded"
-        Closed="Window_Closed"
         Title="Command View List" Height="450" Width="800">
 
-    <Window.InputBindings>
-        
-    </Window.InputBindings>
-    <StackPanel>
-        <Button x:Name="Cancel_Button" Height="30" Click="Cancel_Button_Click" ></Button>
-        <DataGrid x:Name="ViewListDG" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" ItemsSource="{Binding ViewList}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+    <StackPanel KeyDown="StackPanel_KeyDown">
+        <DataGrid x:Name="ViewListDG" CanUserAddRows="False" CanUserDeleteRows="False" AutoGenerateColumns="False" ItemsSource="{Binding VisualCommand_Struct}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="SM Index" IsReadOnly="True"           Binding="{Binding MIndex}"/>
-                <DataGridTextColumn Header="Prio" IsReadOnly="True"               Binding="{Binding Prio}"/>
-                <DataGridTextColumn Header="Upphämtnings Adr" IsReadOnly="True"   Binding="{Binding UppAddr}"/>
-                <DataGridTextColumn Header="Avlämnings Adr" IsReadOnly="True"     Binding="{Binding AvAddr}"/>
-                <DataGridTextColumn Header="P3" IsReadOnly="True"                 Binding="{Binding Param3}"/>
-                <DataGridTextColumn Header="P4" IsReadOnly="True"                 Binding="{Binding Param4}"/>
-                <DataGridTextColumn Header="P5" IsReadOnly="True"                 Binding="{Binding Param5}"/>
-                <DataGridTextColumn Header="P6" IsReadOnly="True"                 Binding="{Binding Param6}"/>
-                <DataGridTextColumn Header="P7" IsReadOnly="True"                 Binding="{Binding Param7}"/>
-                <DataGridTextColumn Header="P8" IsReadOnly="True"                 Binding="{Binding Param8}"/>
-                <DataGridTextColumn Header="P9" IsReadOnly="True"                 Binding="{Binding Param9}"/>
-                <DataGridTextColumn Header="P10" IsReadOnly="True"                Binding="{Binding Param10}"/>
+                <DataGridTextColumn Header="SM Index" IsReadOnly="True"           Binding="{Binding MIndex, UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="Prio" IsReadOnly="True"               Binding="{Binding Prio,   UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="Upp Adr" IsReadOnly="True"            Binding="{Binding UppAddr,UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="Av adr" IsReadOnly="True"             Binding="{Binding AvAddr, UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="P3" IsReadOnly="True"                 Binding="{Binding Param3, UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="P4" IsReadOnly="True"                 Binding="{Binding Param4, UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="P5" IsReadOnly="True"                 Binding="{Binding Param5, UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="P6" IsReadOnly="True"                 Binding="{Binding Param6, UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="P7" IsReadOnly="True"                 Binding="{Binding Param7, UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="P8" IsReadOnly="True"                 Binding="{Binding Param8, UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="P9" IsReadOnly="True"                 Binding="{Binding Param9, UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="P10" IsReadOnly="True"                Binding="{Binding Param10,UpdateSourceTrigger=PropertyChanged}"/>
             </DataGrid.Columns>
         </DataGrid>
 

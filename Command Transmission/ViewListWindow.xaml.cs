@@ -26,17 +26,23 @@ namespace Command_Transmission
         {
             InitializeComponent();
             ViewListDG.ItemsSource = ViewList;
-            this.DataContext = this;
-        }
-        public class ObservableObject : INotifyPropertyChanged
-        {
-            public event PropertyChangedEventHandler PropertyChanged;
-            public void OnPropertyChanged([CallerMemberName] string propertyName = null)
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            }
+            this.DataContext = ViewList;
         }
 
+        private void StackPanel_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Space)
+            {
+                var CancelmIndexList = new List<int>();
+
+                foreach (VisualCommand_Struct visualCommand_Struct in ViewListDG.SelectedItems)
+                {
+                    CancelmIndexList.Add(visualCommand_Struct.MIndex);
+                }
+
+                ModifyMessage.CancelTasks(CancelmIndexList);
+            }
+        }
         public static VisualCommand_Struct ViewListStruct(Command_Struct _Cmd_Struct)
         {
             VisualCommand_Struct TempCmd_Struct = new VisualCommand_Struct();
@@ -45,6 +51,8 @@ namespace Command_Transmission
 
             TempCmd_Struct.UppAddr = _Cmd_Struct.UppAddr;
             TempCmd_Struct.AvAddr = _Cmd_Struct.AvAddr;
+
+            TempCmd_Struct.Prio = _Cmd_Struct.Prio;
 
             TempCmd_Struct.Param3 = _Cmd_Struct.Param3;
             TempCmd_Struct.Param4 = _Cmd_Struct.Param4;
@@ -59,7 +67,7 @@ namespace Command_Transmission
 
             return TempCmd_Struct;
         }
-        public class VisualCommand_Struct : ObservableObject
+        public class VisualCommand_Struct : MainWindow.ObservableObject
         {
 
             private int _MIndex;
@@ -72,7 +80,7 @@ namespace Command_Transmission
                     OnPropertyChanged();
                 }
             }
-            
+
             private int _UppAddr;
             public int UppAddr
             {
@@ -85,6 +93,7 @@ namespace Command_Transmission
             }
 
             private int _AvAddr;
+
             public int AvAddr
             {
                 get { return _AvAddr; }
@@ -94,6 +103,7 @@ namespace Command_Transmission
                     OnPropertyChanged();
                 }
             }
+
 
             private int _Prio;
             public int Prio
@@ -116,7 +126,7 @@ namespace Command_Transmission
                     OnPropertyChanged();
                 }
             }
-            
+
             private int _Param4;
             public int Param4
             {
@@ -127,7 +137,7 @@ namespace Command_Transmission
                     OnPropertyChanged();
                 }
             }
-            
+
             public int _Param5;
             public int Param5
             {
@@ -138,7 +148,7 @@ namespace Command_Transmission
                     OnPropertyChanged();
                 }
             }
-            
+
             private int _Param6;
             public int Param6
             {
@@ -149,7 +159,7 @@ namespace Command_Transmission
                     OnPropertyChanged();
                 }
             }
-            
+
             private int _Param7;
             public int Param7
             {
@@ -160,7 +170,7 @@ namespace Command_Transmission
                     OnPropertyChanged();
                 }
             }
-            
+
             private int _Param8;
             public int Param8
             {
@@ -171,18 +181,18 @@ namespace Command_Transmission
                     OnPropertyChanged();
                 }
             }
-            
+
             private int _Param9;
             public int Param9
             {
                 get { return _Param9; }
                 set
                 {
-                    _AvAddr = value;
+                    _Param9 = value;
                     OnPropertyChanged();
                 }
             }
-            
+
             private int _Param10;
             public int Param10
             {
@@ -193,7 +203,7 @@ namespace Command_Transmission
                     OnPropertyChanged();
                 }
             }
-            
+
             private int _MaxUpdhrH;
             public int MaxUpdhrH
             {
@@ -204,20 +214,6 @@ namespace Command_Transmission
                     OnPropertyChanged();
                 }
             }
-
-        }
-
-        private void Cancel_Button_Click(object sender, RoutedEventArgs e)
-        {
-            var mc = new MainWindow();
-            var CancelmIndexList = new List<int>();
-            foreach (var CancelIndex in ViewListDG.SelectedItems)
-            {
-                int index = ViewListDG.Items.IndexOf(CancelIndex);
-                CancelmIndexList.Add(CmdStrct[index].MIndex);
-            }
-
-            mc.CancelTasks(CancelmIndexList);
         }
     }
 }

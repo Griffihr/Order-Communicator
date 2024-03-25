@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Command_Transmission"
         mc:Ignorable="d"
-        Title="Simulator Command Communicator" Height="720" Width="1280" FontFamily="Seoge UI Light">
+        Title="Simulator Order Communicator" Height="720" Width="1280" FontFamily="Seoge UI Light">
 
 
 
@@ -14,20 +14,50 @@
 
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="4*" />
+            <ColumnDefinition Width="5*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <DataGrid x:Name="DG1" Margin="40,0,10,0" Grid.Column="1"  
-                    CanUserDeleteRows="True" CanUserAddRows="False" AutoGenerateColumns="False" Height="auto" ItemsSource="{Binding CmdStrct}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+   
+        <DataGrid x:Name="DG1" Margin="40,0,10,0" Grid.Column="1"
+        CanUserDeleteRows="True" CanUserAddRows="False" AutoGenerateColumns="False" Height="auto" ItemsSource="{Binding CmdStrct}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsManual}" Value= "true">
+                            <Setter Property="Visibility" Value="Collapsed"></Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding OverMaxTs}" Value = "true">
+                            <Setter Property="Background" Value="Red"></Setter>
+                        </DataTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding InQue}" Value="false"></Condition>
+                                <Condition Binding="{Binding OverMaxTs}" Value="false"></Condition>
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Background" Value="White"></Setter>
+                        </MultiDataTrigger>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding InQue}" Value="true"></Condition>
+                                <Condition Binding="{Binding OverMaxTs}" Value="false"></Condition>
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Background" Value="Gray"></Setter>
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Header="Enable" Binding="{Binding Enabled}"/>
-                <DataGridTextColumn Header="Avg Tid" IsReadOnly="True"  Binding="{Binding AvgTime, StringFormat='{}{0:mm\\:ss\\.ff}', UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="SM Index" IsReadOnly="True" Binding="{Binding MIndex, UpdateSourceTrigger=PropertyChanged}"/>
-                <DataGridTextColumn Header="Maxtid"             Binding="{Binding MaxTid}"/>
+                <DataGridTextColumn Header="Avg Tid" IsReadOnly="True"  Binding="{Binding AvgTime, StringFormat='{}{0:mm\\:ss\\.ff}', UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="Max Tid" IsReadOnly="True"  Binding="{Binding MaxTime, StringFormat='{}{0:mm\\:ss\\.ff}', UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="Tid" IsReadOnly="True"  Binding="{Binding Time, StringFormat='{}{0:mm\\:ss\\.ff}', UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="Maxtid"             Binding="{Binding MaxTid, StringFormat='{}{0:mm\\:ss\\.ff}'}"/>
                 <DataGridTextColumn Header="Körda" IsReadOnly="True"    Binding="{Binding OrdersDone, UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="Maxantal / h"       Binding="{Binding MaxUpdrH}"/>
                 <DataGridTextColumn Header="Prio"               Binding="{Binding Prio}"/>
@@ -45,34 +75,52 @@
             </DataGrid.Columns>
         </DataGrid>
 
+        <WrapPanel Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40, 0, 0 ,0" >
+            <Button Content="Order View" Click="Show_OrderView" Width="100" Height="20"></Button>
+            <Button Content="Message View" Click="Show_MessageView"  Width="100" ></Button>
+        </WrapPanel>
+        
+        <TextBox x:Name="Text_Out" Grid.Column="1" Grid.Row="1" Margin="40,20,0,10" IsReadOnly="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <TextBox x:Name="Text_Message" Visibility="Collapsed" Grid.Column="1" Grid.Row="1" Margin="40,20,0,10" IsReadOnly="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
-
-        <TextBox x:Name="Text_Out" Grid.Column="1" Grid.Row="1" Margin="40,10,0,10" IsReadOnly="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-
-
+        
         <StackPanel x:Name="Btn_Grid" Grid.RowSpan="2" Margin="5,0,0,0">
 
             <TextBlock Text="Ip-Adress" Height="20" Width="100" FontSize="15" Margin="0,5,0,0" HorizontalAlignment="Left"/>
-            <TextBox x:Name="Ip_Adress" Text="0.0.0.0" Margin="0, 0, 0, 0"/>
+            <TextBox x:Name="Ip_Adress" Text="0.0.0.0" Margin="0, 0, 100, 0"/>
 
-            <TextBlock Text="Port" Height="20" Width="100" FontSize="15" HorizontalAlignment="Left"/>
-            <TextBox x:Name="Port" Margin="0,0,0,5" />
+            <TextBlock Text="Port" Height="20" Width="100" FontSize="15" HorizontalAlignment="Left" Margin="0, 5, 0 ,0"/>
+            <TextBox x:Name="Port" Margin="0,0,100,0" />
 
-            <Button x:Name="Connect_Button" HorizontalAlignment="Center" Content="Connect" Click="Connect_Button_Click" Width="100" Grid.Row="5" Grid.Column="1" Margin="0,2,0,2"/>
+            <Button x:Name="Connect_Button" HorizontalAlignment="Left" Content="Connect" Click="Connect_Button_Click" Width="150" Grid.Row="5" Grid.Column="1" Margin="0,2,0,2"/>
 
-            <Button x:Name="Cancel_Button" HorizontalAlignment="Center" Content="Cancel Order" Click="Cancel_Button_Click" Width="100" Grid.Row="6" Grid.Column="1" Margin="0,2,0,2"/>
+            <TextBlock Width="150" HorizontalAlignment="Left" Text="TimeScale" Margin="0, 20 ,0 ,0"></TextBlock>
 
-            <Button x:Name="Stop_Button" HorizontalAlignment="Center" Content="Stop" Click="Stop_Button_Click" Width="100" Grid.Row="7" Grid.Column="1" Margin="0,2,0,2"/>
+            <ComboBox x:Name="TimeScaleComboBox" Width="150" HorizontalAlignment="Left" SelectionChanged="ComboBox_SelectionChanged">
+                <ComboBoxItem Content="0.1"></ComboBoxItem>
+                <ComboBoxItem Content="1"></ComboBoxItem>
+                <ComboBoxItem Content="2"></ComboBoxItem>
+                <ComboBoxItem Content="3"></ComboBoxItem>
+                <ComboBoxItem Content="4"></ComboBoxItem>
+                <ComboBoxItem Content="5"></ComboBoxItem>
+                <ComboBoxItem Content="10"></ComboBoxItem>
+            </ComboBox>
+            
+            <Button x:Name="Start_Button" HorizontalAlignment="Left" Content="Start" Click="Start_Button_Click" Width="150" Grid.Column="1" Margin="0,20,0,2" />
+            
+            <Button x:Name="Stop_Button" HorizontalAlignment="Left" Content="Stop" Click="Stop_Button_Click" Width="150" Margin="0,2,0,2"/>
 
-            <Button x:Name="Add_Button" Content="Add" Click="Add_button_Click" Grid.Row="8" Grid.Column="1" Margin="10,2,10,2" />
+            <Button x:Name="ManualRun_Button" HorizontalAlignment="Left" Content="Manual Add" Width="150" Click="ManualRun_Button_Click" Margin="0,20,0,2" />
 
-            <Button x:Name="ManualRun_Button" Content="Manual" Click="ManualRun_Button_Click" />
+            <Button x:Name="ViewListButton" HorizontalAlignment="Left" Content="View Command List" Width="150" Click="ViewListButton_Click" Margin="0,2,0,2"/>
 
-            <TextBlock x:Name="Connect" Grid.Column="1" Grid.Row="9" FontSize="10" Margin="10,2,10,2" />
+            <Button x:Name="Add_Button" HorizontalAlignment="Left" Content="Add Order" Click="Add_button_Click" Width="150" Margin="0,20,0,2" />
 
-            <Button x:Name="Start_Button" Content="Start" Click="Start_Button_Click" Grid.Column="1" Grid.Row="9" Margin="10,2,10,2" />
+            <Button x:Name="Cancel_Button" HorizontalAlignment="Left" Content="Cancel Order" Click="Cancel_Button_Click" Width="150" Grid.Row="6" Grid.Column="1" Margin="0,2,0,2"/>
 
-            <Button x:Name="ViewListButton" Content="View Command List" Click="ViewListButton_Click"/>
+            <Button x:Name="EnableButton" HorizontalAlignment="Left" Content="Enable Order" Width="150" Click="EnableButton_Click" Margin="0,2,0,2"/>
+
+            <Button x:Name="DisableButton" HorizontalAlignment="Left" Content="Disable Order" Width="150" Click="DisableButton_Click" Margin="0,2,0,2"/>
         </StackPanel>
 
     </Grid>
