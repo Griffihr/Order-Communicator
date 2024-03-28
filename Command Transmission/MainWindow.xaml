@@ -88,16 +88,16 @@
         </WrapPanel>
         
         <TextBox x:Name="Text_Out" Grid.Column="1" Grid.Row="1" Margin="40,20,0,10" IsReadOnly="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-        <TextBox x:Name="Text_Message" Visibility="Collapsed" Grid.Column="1" Grid.Row="1" Margin="40,20,0,10" IsReadOnly="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <TextBox x:Name="Text_Message"  Visibility="Collapsed" Grid.Column="1" Grid.Row="1" Margin="40,20,0,10" IsReadOnly="True" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
         
         <StackPanel x:Name="Btn_Grid" Grid.RowSpan="2" Margin="5,0,0,0">
 
             <TextBlock Text="Ip-Adress" Height="20" Width="100" FontSize="15" Margin="0,5,0,0" HorizontalAlignment="Left"/>
-            <TextBox x:Name="Ip_Adress" Text="0.0.0.0" Margin="0, 0, 100, 0"/>
+            <TextBox x:Name="Ip_Adress"  Width="100" Text="0.0.0.0" Margin="0, 0, 0, 0" HorizontalAlignment="Left"/>
 
             <TextBlock Text="Port" Height="20" Width="100" FontSize="15" HorizontalAlignment="Left" Margin="0, 5, 0 ,0"/>
-            <TextBox x:Name="Port" Margin="0,0,100,0" />
+            <TextBox x:Name="Port" Width="100" Margin="0,0,0,0" HorizontalAlignment="Left"/>
 
             <Button x:Name="Connect_Button" HorizontalAlignment="Left" Content="Connect" Click="Connect_Button_Click" Width="150" Grid.Row="5" Grid.Column="1" Margin="0,2,0,2"/>
 

@@ -467,30 +467,7 @@ namespace Command_Transmission
 
                 case 4097: //Order Loaded
                     {
-
-                        /*
-                        int i = 0;
-
-                        foreach (Command_Struct _Command_Struct in CmdStrct)
-                        {
-                            if (_Command_Struct.MIndex == mIndex)
-                            {
-
-                                _Command_Struct.OrderStartTime = DateTime.Now;
-
-                                pWatch.Start();
-
-                                CurrentOrderMindex = mIndex;
-                                CurrentOrderIndex = i;
-
-                                Dispatcher.Invoke(() => TextBoxAppend("Order " + mIndex + ": Picked up \r\n"));                          
-                                
-                            }
-
-                            i++;
-
-                        }
-                        */
+                        Dispatcher.Invoke(() => TextBoxAppend("Order " + mIndex + ": Loaded \r\n"));
                         break;
                     }
             
