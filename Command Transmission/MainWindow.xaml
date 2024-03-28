@@ -22,8 +22,9 @@
         </Grid.RowDefinitions>
 
    
-        <DataGrid x:Name="DG1" Margin="40,0,10,0" Grid.Column="1"
-        CanUserDeleteRows="True" CanUserAddRows="False" AutoGenerateColumns="False" Height="auto" ItemsSource="{Binding CmdStrct}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+        <DataGrid x:Name="DG1" Margin="40,0,10,0" Grid.Column="1"                  
+                  CanUserDeleteRows="True" CanUserAddRows="False" AutoGenerateColumns="False" Height="auto" ItemsSource="{Binding CmdStrct}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+           
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow">
                     <Style.Triggers>
@@ -51,18 +52,25 @@
                 </Style>
             </DataGrid.RowStyle>
 
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <EventSetter Event="MouseRightButtonDown" Handler="columnHeader_Click" />
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+         
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Header="Enable" Binding="{Binding Enabled}"/>
-                <DataGridTextColumn Header="SM Index" IsReadOnly="True" Binding="{Binding MIndex, UpdateSourceTrigger=PropertyChanged}"/>
-                <DataGridTextColumn Header="Avg Tid" IsReadOnly="True"  Binding="{Binding AvgTime, StringFormat='{}{0:mm\\:ss\\.ff}', UpdateSourceTrigger=PropertyChanged}"/>
-                <DataGridTextColumn Header="Max Tid" IsReadOnly="True"  Binding="{Binding MaxTime, StringFormat='{}{0:mm\\:ss\\.ff}', UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="MIndex" IsReadOnly="True" Binding="{Binding MIndex, UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="Tid" IsReadOnly="True"  Binding="{Binding Time, StringFormat='{}{0:mm\\:ss\\.ff}', UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="Avg" IsReadOnly="True"  Binding="{Binding AvgTime, StringFormat='{}{0:mm\\:ss\\.ff}', UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="Max" IsReadOnly="True"  Binding="{Binding MaxTime, StringFormat='{}{0:mm\\:ss\\.ff}', UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="Maxtid"             Binding="{Binding MaxTid, StringFormat='{}{0:mm\\:ss\\.ff}'}"/>
                 <DataGridTextColumn Header="Körda" IsReadOnly="True"    Binding="{Binding OrdersDone, UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="Maxantal / h"       Binding="{Binding MaxUpdrH}"/>
                 <DataGridTextColumn Header="Prio"               Binding="{Binding Prio}"/>
-                <DataGridTextColumn Header="Upphämtnings Adr"   Binding="{Binding UppAddr}"/>
-                <DataGridTextColumn Header="Avlämnings Adr"     Binding="{Binding AvAddr}"/>
+                <DataGridTextColumn Header="P0"                 Binding="{Binding Param0}"/>
+                <DataGridTextColumn Header="P1"                 Binding="{Binding Param1}"/>
+                <DataGridTextColumn Header="P2"                 Binding="{Binding Param2}"/>
                 <DataGridTextColumn Header="P3"                 Binding="{Binding Param3}"/>
                 <DataGridTextColumn Header="P4"                 Binding="{Binding Param4}"/>
                 <DataGridTextColumn Header="P5"                 Binding="{Binding Param5}"/>
@@ -70,7 +78,6 @@
                 <DataGridTextColumn Header="P7"                 Binding="{Binding Param7}"/>
                 <DataGridTextColumn Header="P8"                 Binding="{Binding Param8}"/>
                 <DataGridTextColumn Header="P9"                 Binding="{Binding Param9}"/>
-                <DataGridTextColumn Header="P10"                Binding="{Binding Param10}"/>
                 <DataGridTextColumn Header="Start-Ts"           Binding="{Binding StartTs}"/>
             </DataGrid.Columns>
         </DataGrid>

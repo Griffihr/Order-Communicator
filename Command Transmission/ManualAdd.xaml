@@ -10,11 +10,11 @@
     <Grid>
 
         <StackPanel Grid.Column="0" Margin="15, 10, 15, 0">
-            <TextBlock Text="Upp Adress"/>
-            <TextBox x:Name="Upp_Addr" Width="175" HorizontalAlignment="Left"/>
+            <TextBlock Text="Param0"/>
+            <TextBox x:Name="Param0" Width="175" HorizontalAlignment="Left"/>
 
-            <TextBlock  Text="Av Adress"/>
-            <TextBox x:Name="Av_Addr" Width="175" HorizontalAlignment="Left"/>
+            <TextBlock  Text="Param1"/>
+            <TextBox x:Name="Param1" Width="175" HorizontalAlignment="Left"/>
 
             <TextBlock Text = "Priority"/>
             <TextBox x:Name="Prio" Margin ="0, 0, 150, 0"/>
@@ -25,6 +25,20 @@
             <WrapPanel Margin="0, 15, 0, 0">
                 
                 <StackPanel>
+                    <TextBlock Text="P2"/>
+                    <TextBox x:Name="P2" Width="75"/>
+
+                    <TextBlock Text="P4" Margin="0, 5, 0, 0"/>
+                    <TextBox x:Name="P4" Width="75"/>
+
+                    <TextBlock Text="P6" Margin="0, 5, 0, 0"/>
+                    <TextBox x:Name="P6" Width="75"/>
+
+                    <TextBlock Text="P8" Margin="0, 5, 0, 0"/>
+                    <TextBox x:Name="P8" Width="75"/>
+                </StackPanel>
+                
+                <StackPanel Margin="25, 0, 0, 0">
                     <TextBlock Text="P3"/>
                     <TextBox x:Name="P3" Width="75"/>
 
@@ -36,20 +50,6 @@
 
                     <TextBlock Text="P9" Margin="0, 5, 0, 0"/>
                     <TextBox x:Name="P9" Width="75"/>
-                </StackPanel>
-                
-                <StackPanel Margin="25, 0, 0, 0">
-                    <TextBlock Text="P4"/>
-                    <TextBox x:Name="P4" Width="75"/>
-
-                    <TextBlock Text="P6" Margin="0, 5, 0, 0"/>
-                    <TextBox x:Name="P6" Width="75"/>
-
-                    <TextBlock Text="P8" Margin="0, 5, 0, 0"/>
-                    <TextBox x:Name="P8" Width="75"/>
-
-                    <TextBlock Text="P10" Margin="0, 5, 0, 0"/>
-                    <TextBox x:Name="P10" Width="75"/>
                 </StackPanel>
 
 

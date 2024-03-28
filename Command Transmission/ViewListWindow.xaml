@@ -12,16 +12,16 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="SM Index" IsReadOnly="True"           Binding="{Binding MIndex, UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="Prio" IsReadOnly="True"               Binding="{Binding Prio,   UpdateSourceTrigger=PropertyChanged}"/>
-                <DataGridTextColumn Header="Upp Adr" IsReadOnly="True"            Binding="{Binding UppAddr,UpdateSourceTrigger=PropertyChanged}"/>
-                <DataGridTextColumn Header="Av adr" IsReadOnly="True"             Binding="{Binding AvAddr, UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="P0" IsReadOnly="True"            Binding="{Binding Param0,UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="P1" IsReadOnly="True"             Binding="{Binding Param1, UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="P2" IsReadOnly="True"                 Binding="{Binding Param2, UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="P3" IsReadOnly="True"                 Binding="{Binding Param3, UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="P4" IsReadOnly="True"                 Binding="{Binding Param4, UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="P5" IsReadOnly="True"                 Binding="{Binding Param5, UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="P6" IsReadOnly="True"                 Binding="{Binding Param6, UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="P7" IsReadOnly="True"                 Binding="{Binding Param7, UpdateSourceTrigger=PropertyChanged}"/>
                 <DataGridTextColumn Header="P8" IsReadOnly="True"                 Binding="{Binding Param8, UpdateSourceTrigger=PropertyChanged}"/>
-                <DataGridTextColumn Header="P9" IsReadOnly="True"                 Binding="{Binding Param9, UpdateSourceTrigger=PropertyChanged}"/>
-                <DataGridTextColumn Header="P10" IsReadOnly="True"                Binding="{Binding Param10,UpdateSourceTrigger=PropertyChanged}"/>
+                <DataGridTextColumn Header="P9" IsReadOnly="True"                Binding="{Binding Param9,UpdateSourceTrigger=PropertyChanged}"/>
             </DataGrid.Columns>
         </DataGrid>
 

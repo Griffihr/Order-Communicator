@@ -33,6 +33,7 @@ using static System.Net.Mime.MediaTypeNames;
 using static Command_Transmission.ViewListWindow;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using System.Windows.Controls.Primitives;
 
 namespace Command_Transmission
 {   
@@ -209,6 +210,23 @@ namespace Command_Transmission
             Initiate_Order();
         }
 
+        private void columnHeader_Click(object sender, RoutedEventArgs e)
+        {
+            var ColumnHeader = sender as DataGridColumnHeader;
+            if (ColumnHeader != null)
+            {
+
+                string oldName = DG1.Columns[ColumnHeader.DisplayIndex].Header.ToString();
+
+                string newName = NameWindow.GetName(oldName);
+
+                if (newName != null && newName != "")
+                {
+                    DG1.Columns[ColumnHeader.DisplayIndex].Header = newName;
+                }
+            }
+        }
+
         public void Timer2Elapsed(Object State, ElapsedEventArgs e)
         {
             if (pWatch.IsRunning)
@@ -314,7 +332,7 @@ namespace Command_Transmission
                         {
                             Dispatcher.Invoke(() => MessageBoxAppend(mType + hex.ToString(0, TotalLenght) + "\r\n"));
                         }
-                        
+            
 
 
                         Array.Clear(rMessage, 0, rMessage.Length);
@@ -322,6 +340,8 @@ namespace Command_Transmission
                     }
                 }
             }
+
+            Dispatcher.Invoke(() => ViewListWindow.ViewList.Clear());
 
             pWatch.Stop();
             pWatch.Reset();
@@ -562,6 +582,8 @@ namespace Command_Transmission
                         {
                             Dispatcher.Invoke(() => CmdStrct.RemoveAt(CmdIndex));
                         }
+
+                        LastMessageCheck();
 
                         if (MIndex == LastOrderMindex)
                         {
@@ -1025,8 +1047,9 @@ namespace Command_Transmission
             public int Prio { get; set; }
             public int StartTs { get; set; }
             public int KördH { get; set; }
-            public int UppAddr { get; set; }
-            public int AvAddr { get; set; }
+            public int Param0 { get; set; }
+            public int Param1 { get; set; }
+            public int Param2 { get; set; }
             public int Param3 { get; set; }
             public int Param4 { get; set; }
             public int Param5 { get; set; }
@@ -1034,7 +1057,6 @@ namespace Command_Transmission
             public int Param7 { get; set; }
             public int Param8 { get; set; }
             public int Param9 { get; set; }
-            public int Param10 { get; set; }
         }
         public class MessageCreate
         {
@@ -1067,24 +1089,24 @@ namespace Command_Transmission
                 Byte b13 = (byte)cmdStrct.StartTs;
                 Byte b14 = (byte)cmdStrct.Prio;
 
-                byte[] UppAddr = BitConverter.GetBytes(cmdStrct.UppAddr);
+                byte[] Param0 = BitConverter.GetBytes(cmdStrct.Param0);
 
-                Byte b15 = UppAddr[1];
-                Byte b16 = UppAddr[0];
+                Byte b15 = Param0[1];
+                Byte b16 = Param0[0];
 
-                byte[] AvAddr = BitConverter.GetBytes(cmdStrct.AvAddr);
+                byte[] Param1 = BitConverter.GetBytes(cmdStrct.Param1);
 
-                Byte b17 = AvAddr[1];
-                Byte b18 = AvAddr[0];
+                Byte b17 = Param1[1];
+                Byte b18 = Param1[0];
 
-                Byte b19 = (byte)(cmdStrct.Param3); Byte b20 = (byte)(cmdStrct.Param3 >> 8);
-                Byte b21 = (byte)(cmdStrct.Param4); Byte b22 = (byte)(cmdStrct.Param4 >> 8);
-                Byte b23 = (byte)(cmdStrct.Param5); Byte b24 = (byte)(cmdStrct.Param5 >> 8);
-                Byte b25 = (byte)(cmdStrct.Param6); Byte b26 = (byte)(cmdStrct.Param6 >> 8);
-                Byte b27 = (byte)(cmdStrct.Param7); Byte b28 = (byte)(cmdStrct.Param7 >> 8);
-                Byte b29 = (byte)(cmdStrct.Param8); Byte b30 = (byte)(cmdStrct.Param8 >> 8);
-                Byte b31 = (byte)(cmdStrct.Param9); Byte b32 = (byte)(cmdStrct.Param9 >> 8);
-                Byte b33 = (byte)(cmdStrct.Param10); Byte b34 = (byte)(cmdStrct.Param10 >> 8);
+                Byte b19 = (byte)(cmdStrct.Param2); Byte b20 = (byte)(cmdStrct.Param2 >> 8);
+                Byte b21 = (byte)(cmdStrct.Param3); Byte b22 = (byte)(cmdStrct.Param3 >> 8);
+                Byte b23 = (byte)(cmdStrct.Param4); Byte b24 = (byte)(cmdStrct.Param4 >> 8);
+                Byte b25 = (byte)(cmdStrct.Param5); Byte b26 = (byte)(cmdStrct.Param5 >> 8);
+                Byte b27 = (byte)(cmdStrct.Param6); Byte b28 = (byte)(cmdStrct.Param6 >> 8);
+                Byte b29 = (byte)(cmdStrct.Param7); Byte b30 = (byte)(cmdStrct.Param7 >> 8);
+                Byte b31 = (byte)(cmdStrct.Param8); Byte b32 = (byte)(cmdStrct.Param8 >> 8);
+                Byte b33 = (byte)(cmdStrct.Param9); Byte b34 = (byte)(cmdStrct.Param9 >> 8);
 
 
                 Byte[] aMessage = { b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16, b17, b18, b19, b20, b21, b22, b23, b24, b25, b26, b27, b28, b29, b30, b31, b32, b33, b34 };
@@ -1093,6 +1115,6 @@ namespace Command_Transmission
             }
         }
 
- 
+        
     }
 }

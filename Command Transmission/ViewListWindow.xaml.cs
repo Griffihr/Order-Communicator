@@ -49,19 +49,19 @@ namespace Command_Transmission
 
             TempCmd_Struct.MIndex = _Cmd_Struct.MIndex;
 
-            TempCmd_Struct.UppAddr = _Cmd_Struct.UppAddr;
-            TempCmd_Struct.AvAddr = _Cmd_Struct.AvAddr;
+            TempCmd_Struct.Param0 = _Cmd_Struct.Param0;
+            TempCmd_Struct.Param1 = _Cmd_Struct.Param1;
 
             TempCmd_Struct.Prio = _Cmd_Struct.Prio;
 
+            TempCmd_Struct.Param2 = _Cmd_Struct.Param2;
+            TempCmd_Struct.Param2 = _Cmd_Struct.Param2;
             TempCmd_Struct.Param3 = _Cmd_Struct.Param3;
             TempCmd_Struct.Param4 = _Cmd_Struct.Param4;
             TempCmd_Struct.Param5 = _Cmd_Struct.Param5;
             TempCmd_Struct.Param6 = _Cmd_Struct.Param6;
             TempCmd_Struct.Param7 = _Cmd_Struct.Param7;
             TempCmd_Struct.Param8 = _Cmd_Struct.Param8;
-            TempCmd_Struct.Param9 = _Cmd_Struct.Param9;
-            TempCmd_Struct.Param10 = _Cmd_Struct.Param10;
 
             TempCmd_Struct.MaxUpdhrH = _Cmd_Struct.MaxUpdrH;
 
@@ -81,25 +81,25 @@ namespace Command_Transmission
                 }
             }
 
-            private int _UppAddr;
-            public int UppAddr
+            private int _Param0;
+            public int Param0
             {
-                get { return _UppAddr; }
+                get { return _Param0; }
                 set
                 {
-                    _UppAddr = value;
+                    _Param0 = value;
                     OnPropertyChanged();
                 }
             }
 
-            private int _AvAddr;
+            private int _Param1;
 
-            public int AvAddr
+            public int Param1
             {
-                get { return _AvAddr; }
+                get { return _Param1; }
                 set
                 {
-                    _AvAddr = value;
+                    _Param1 = value;
                     OnPropertyChanged();
                 }
             }
@@ -116,6 +116,17 @@ namespace Command_Transmission
                 }
             }
 
+            private int _Param2;
+            public int Param2
+            {
+                get { return _Param2; }
+                set
+                {
+                    _Param2 = value;
+                    OnPropertyChanged();
+                }
+            }
+
             private int _Param3;
             public int Param3
             {
@@ -127,7 +138,7 @@ namespace Command_Transmission
                 }
             }
 
-            private int _Param4;
+            public int _Param4;
             public int Param4
             {
                 get { return _Param4; }
@@ -138,7 +149,7 @@ namespace Command_Transmission
                 }
             }
 
-            public int _Param5;
+            private int _Param5;
             public int Param5
             {
                 get { return _Param5; }
@@ -189,17 +200,6 @@ namespace Command_Transmission
                 set
                 {
                     _Param9 = value;
-                    OnPropertyChanged();
-                }
-            }
-
-            private int _Param10;
-            public int Param10
-            {
-                get { return _Param10; }
-                set
-                {
-                    _Param10 = value;
                     OnPropertyChanged();
                 }
             }
